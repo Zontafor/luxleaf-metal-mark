@@ -5,6 +5,7 @@ import {
   liquidShare,
   liquidFromShare,
 } from "../src/liquid";
+import { drawPreview, exportPreviewPNG } from "../src/preview-export";
 import { Surface } from "../src/surface";
 import { liquidFragment } from "../src/liquid-shader";
 import { conductorFresnel, smithMask } from "../src/optics";
@@ -229,6 +230,38 @@ document.querySelector("#run")!.addEventListener("click", async () => {
       precision.destroy();
       precisionCanvas.remove();
     }
+    const sentileaf = await fetch("/sentileaf.png");
+    if (!sentileaf.ok) throw Error("SentiLeaf fixture unavailable");
+    await r.load(
+      new File([await sentileaf.blob()], "sentileaf.png", {
+        type: "image/png",
+      }),
+    );
+    const composite = document.createElement("canvas");
+    drawPreview(canvas, composite, "#123456");
+    const context = composite.getContext("2d")!,
+      corner = context.getImageData(1, 1, 1, 1).data;
+    check(
+      "SentiLeaf has no reflective backdrop and exports the chosen solid background",
+      corner[0] === 18 &&
+        corner[1] === 52 &&
+        corner[2] === 86 &&
+        corner[3] === 255,
+    );
+    drawPreview(canvas, composite, "gradient");
+    const topPixel = context.getImageData(1, 1, 1, 1).data,
+      bottomPixel = context.getImageData(1, composite.height - 2, 1, 1).data;
+    check(
+      "gradient export retains opaque top and bottom backdrop colors",
+      topPixel[0] > 235 &&
+        bottomPixel[0] < 190 &&
+        topPixel[3] === 255 &&
+        bottomPixel[3] === 255,
+    );
+    check(
+      "composited PNG export produces an actual image",
+      (await exportPreviewPNG(canvas, "#ffffff")).size > 100,
+    );
     r.destroy();
     check("renderer releases resources", r.surface.status === "disposed");
     out.textContent = lines.join("\n") + "\nALL PASSED: " + lines.length;

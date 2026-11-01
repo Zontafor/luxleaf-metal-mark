@@ -1,0 +1,18 @@
+{
+  "recorded": "2026-11-01",
+  "subject": "SentiLeaf user-provided logo",
+  "source": "Actual LuxLeaf Metal Mark canvas with composited preview background",
+  "durationSeconds": 9.833333,
+  "exportWidth": 960,
+  "exportHeight": 960,
+  "fps": 30,
+  "audio": false,
+  "motion": "Procedural normal waves; not a fluid simulation",
+  "meanFrameChangeSeconds1To8": 2.442,
+  "files": {
+    "sentileaf-poster.jpg": "ad0d3882c0c6b86653f4cd24cd17f3cc7ddcb5433cbe2ec33d73de89af01bbc7",
+    "sentileaf-liquid-metal.webm": "c48530c5fc1f294c9341fad1711cb3f856b8165aa6fd52d0c15a89d3dbe75652",
+    "sentileaf-liquid-metal.mp4": "dfb3652e8dfaf4826cc83d61774920296c3a16793ba11457bc3de7718ba017cc",
+    "sentileaf-preview.gif": "830b2cf92d389313c5bf7e4ce16c00bdffb292455c67ed922fb3380adabfc49d"
+  }
+}

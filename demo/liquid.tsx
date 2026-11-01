@@ -11,7 +11,7 @@ import {
   liquidFromShare,
   validateLiquidProject,
 } from "../src/liquid";
-import { recordCanvas } from "../src/recording";
+import { exportPreviewPNG, recordPreview } from "../src/preview-export";
 import "./liquid.css";
 const labels: Record<keyof LiquidSettings, string> = {
   refraction: "Refraction",
@@ -41,10 +41,10 @@ function App() {
   async function restore(project: LiquidProject) {
     const x = validateLiquidProject(project);
     const bytes = Uint8Array.from(atob(x.logo.split(",")[1]), (c) =>
-      c.charCodeAt(0)
+      c.charCodeAt(0),
     );
     await renderer.current!.load(
-      new File([bytes], "logo.png", { type: "image/png" })
+      new File([bytes], "logo.png", { type: "image/png" }),
     );
     set(x.settings);
     bg(x.background);
@@ -62,7 +62,15 @@ function App() {
       try {
         if (location.hash.startsWith("#liquid="))
           await restore(liquidFromShare(location.href));
-        else await r.example("leaf");
+        else {
+          const response = await fetch("/sentileaf.png");
+          if (!response.ok) throw Error("SentiLeaf demo image unavailable");
+          await r.load(
+            new File([await response.blob()], "sentileaf.png", {
+              type: "image/png",
+            }),
+          );
+        }
         isReady(true);
       } catch (e) {
         status(String(e));
@@ -138,8 +146,8 @@ function App() {
                       color === "gradient"
                         ? "Gradient background"
                         : color === "#ffffff"
-                        ? "White background"
-                        : "Black background"
+                          ? "White background"
+                          : "Black background"
                     }
                     onClick={() => bg(color)}
                     style={{
@@ -209,12 +217,39 @@ function App() {
               }}
             />
             <p className="hint">
-              Use a transparent or white background. SVG and high-resolution
-              images work well.
+              Transparent or flat-color backgrounds are supported. The image
+              backdrop is removed and the logo is fitted to the preview.
+            </p>
+            <p className="hint">
+              {settings.speed === 0
+                ? "Motion paused — increase Speed to animate."
+                : "Motion playing"}
             </p>
             <p role="status">{message}</p>
           </section>
         </div>
+        <button
+          disabled={!ready || busy}
+          onClick={async () => {
+            working(true);
+            try {
+              const response = await fetch("/sentileaf.png");
+              if (!response.ok) throw Error("Demo image unavailable");
+              await load(
+                new File([await response.blob()], "sentileaf.png", {
+                  type: "image/png",
+                }),
+              );
+              set({ ...liquidDefaults });
+            } catch (e) {
+              status(String(e));
+            } finally {
+              working(false);
+            }
+          }}
+        >
+          SentiLeaf demo
+        </button>
         <nav className="examples" aria-label="Example shapes">
           {liquidExamples.map((shape) => (
             <button
@@ -244,6 +279,10 @@ function App() {
         </nav>
         <details>
           <summary>Export and share</summary>
+          <p className="hint">
+            PNG and video include the selected background. Use Transparent PNG
+            for compositing.
+          </p>
           <div className="actions">
             <button
               disabled={!ready || busy}
@@ -251,7 +290,22 @@ function App() {
                 try {
                   download(
                     await renderer.current!.exportPNG(),
-                    "luxleaf-liquid.png"
+                    "sentileaf-transparent.png",
+                  );
+                } catch (e) {
+                  status(String(e));
+                }
+              }}
+            >
+              Transparent PNG
+            </button>
+            <button
+              disabled={!ready || busy}
+              onClick={async () => {
+                try {
+                  download(
+                    await exportPreviewPNG(canvas.current!, background),
+                    "luxleaf-liquid.png",
                   );
                 } catch (e) {
                   status(String(e));
@@ -263,12 +317,18 @@ function App() {
             <button
               disabled={!ready || busy}
               onClick={async () => {
+                if (settings.speed === 0) {
+                  status("Motion is paused. Increase Speed before recording.");
+                  return;
+                }
                 working(true);
+                status("Recording 10 seconds with the selected background…");
                 try {
                   download(
-                    await recordCanvas(canvas.current!),
-                    "luxleaf-liquid.webm"
+                    await recordPreview(canvas.current!, background),
+                    "sentileaf-liquid-metal.webm",
                   );
+                  status("Video saved with the selected background");
                 } catch (e) {
                   status(String(e));
                 } finally {
@@ -286,7 +346,7 @@ function App() {
                     new Blob([JSON.stringify(project())], {
                       type: "application/json",
                     }),
-                    "luxleaf-liquid.json"
+                    "luxleaf-liquid.json",
                   );
                 } catch (e) {
                   status(String(e));
@@ -302,7 +362,7 @@ function App() {
                   history.replaceState(
                     null,
                     "",
-                    liquidShare(project(), location.href)
+                    liquidShare(project(), location.href),
                   );
                   status("Share link is in the address bar");
                 } catch (e) {

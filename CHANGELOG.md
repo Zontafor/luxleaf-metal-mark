@@ -26,3 +26,11 @@ Initial limited workbench release. It did not establish complete upstream parity
 - Preserve linear relief fields in RGBA16F textures across GPU context recovery.
 - Use soft studio panels, a continuous tangent basis, three analytic motion waves and 48 GGX samples.
 - Add symmetry/precision and GPU texture-recovery checks; retain the existing API and license notices.
+
+## Unreleased — SentiLeaf input and export
+
+- Remove uniform raster backdrops before relief generation and fit artwork without excess margins.
+- Use the supplied SentiLeaf logo as the default editor demonstration.
+- Composite the selected background into PNG/video exports; retain a transparent PNG action and compatible renderer API.
+- Explain paused motion and prevent accidental still-video exports at zero speed.
+- Add background/coverage regressions and a recorded SentiLeaf demo; source remains private.

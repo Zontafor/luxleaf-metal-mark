@@ -4,7 +4,9 @@
 
 [Run the editor](#run-the-editor) · [Renderer example](#renderer-example) · [Controls](#controls) · [Published-package guide](#published-package-guide)
 
-![Independent liquid editor with reflected studio lighting](docs/images/liquid-editor.jpg)
+[![SentiLeaf in liquid metal motion](docs/media/sentileaf-preview.gif)](docs/media/sentileaf-liquid-metal.mp4)
+
+[Watch MP4](docs/media/sentileaf-liquid-metal.mp4) · [Original WebM](docs/media/sentileaf-liquid-metal.webm) · [SentiLeaf demo and export guide](docs/SENTILEAF.md)
 
 *Actual local editor. [View its source](demo/liquid.tsx). Exact pixel and original server-API equivalence are not established.*
 
@@ -21,7 +23,7 @@ npm ci --ignore-scripts
 npm run dev
 ```
 
-Open the Vite URL. Choose a geometric example or upload your own logo. Adjust the six effect controls and preview background. Expand **Export and share** to save PNG, record WebM, save a project or create a bounded share link.
+Open the Vite URL. SentiLeaf loads as the default demonstration. Choose a geometric example or upload your own logo. Adjust the six effect controls and preview background. Expand **Export and share** to save PNG, record WebM, save a project or create a bounded share link.
 
 ## Renderer example
 
@@ -63,12 +65,12 @@ The current renderer solves a smooth rounded surface inside the logo mask, prese
 
 ## Projects and export
 
-`liquidShare()` and `liquidFromShare()` round-trip a validated `LiquidProject` in a URL fragment. Use a project file when the embedded image exceeds the link size limit. The `LiquidProject` schema is distinct from the older SQLite `MetalProject` adapter. Preview backgrounds are CSS; PNG output retains transparency.
+`liquidShare()` and `liquidFromShare()` round-trip a validated `LiquidProject` in a URL fragment. Use a project file when the embedded image exceeds the link size limit. The `LiquidProject` schema is distinct from the older SQLite `MetalProject` adapter. Editor PNG and video exports composite the selected preview background. **Transparent PNG** and the renderer’s `exportPNG()` API retain alpha. Flat-color raster backdrops are removed before rendering, and excess margins are fitted automatically.
 
 | Local route | Purpose | Source |
 |---|---|---|
 | `/` | Six-control liquid editor | [Editor](demo/liquid.tsx) |
-| `/checks-liquid.html` | 22 liquid behavior checks | [Checks](demo/checks-liquid.ts) |
+| `/checks-liquid.html` | 25 liquid behavior checks | [Checks](demo/checks-liquid.ts) |
 | `/advanced.html` | Previous studio and project workflow | [Studio](demo/advanced.tsx) |
 
 ## Verification and license
@@ -78,7 +80,7 @@ npm run verify
 npm run verify:package
 ```
 
-TypeScript, production build and 26 automated tests passed; 22 separate browser checks cover rendering, control effects, image input, export, sharing, GPU errors and disposal. [Validation notes](docs/VALIDATION.md) explain remaining gaps.
+TypeScript, production build and 30 automated tests passed; 25 separate browser checks cover rendering, control effects, image input, export, sharing, GPU errors and disposal. [Validation notes](docs/VALIDATION.md) explain remaining gaps.
 
 Original LuxLeaf code remains under the [Michelle L. Wu proprietary license](LICENSE). No Paper implementation source, shader, parser or brand artwork was copied. Dependencies retain their own [licenses](THIRD_PARTY_NOTICES.md).
 

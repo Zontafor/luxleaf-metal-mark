@@ -3,6 +3,7 @@
 import { Surface } from "./surface.js";
 import { buildRelief } from "./relief.js";
 import { liquidFragment } from "./liquid-shader.js";
+import { prepareLogo } from "./logo-input.js";
 import { decodeSVG } from "./svg.js";
 export interface LiquidSettings {
   refraction: number;
@@ -114,12 +115,13 @@ export class LiquidMark {
   private apply(canvas: HTMLCanvasElement) {
     const context = canvas.getContext("2d")!,
       rgba = context.getImageData(0, 0, canvas.width, canvas.height);
-    const mask = buildRelief(rgba.data, canvas.width, canvas.height, {
-      mode: "auto",
+    const prepared = prepareLogo(rgba.data, canvas.width, canvas.height);
+    const mask = buildRelief(prepared.pixels, prepared.width, prepared.height, {
+      mode: "alpha",
     });
     this.logo = canvas.toDataURL();
-    this.surface.setLinearField(mask.field, canvas.width, canvas.height);
-    this.surface.set({ uImageSize: [canvas.width, canvas.height] });
+    this.surface.setLinearField(mask.field, mask.width, mask.height);
+    this.surface.set({ uImageSize: [mask.width, mask.height] });
   }
   async loadSVG(source: string) {
     if (this.dead) throw Error("Renderer disposed");
