@@ -11,7 +11,7 @@ npm run verify:package
 npm run dev
 ```
 
-`verify` checks preserved foundation hashes where applicable, type checks the LuxLeaf code, runs 25 unit/integration tests and builds the library and workbenches. `verify:package` checks export paths and source/notices in the actual tarball, extracts it outside the source tree and imports supported JavaScript entries using the installed dependency tree. The publication workflow additionally installs the package from GitHub's registry into a fresh consumer directory.
+`verify` checks preserved foundation hashes where applicable, type checks the LuxLeaf code, runs 26 unit/integration tests and builds the library and workbenches. `verify:package` checks export paths and source/notices in the actual tarball, extracts it outside the source tree and imports supported JavaScript entries using the installed dependency tree. The publication workflow additionally installs the package from GitHub's registry into a fresh consumer directory.
 
 Open `/checks-expanded.html` and press **Run expanded checks**. The 10 assertions exercise actual browser functionality. Browser checks are manually invoked, not silently counted as GitHub Actions coverage. The older `/checks.html` remains for regression coverage.
 
@@ -35,3 +35,10 @@ On 2026-11-01 the expanded browser suite completed **10/10 passing assertions** 
 ## Conductor update — 2026-11-01
 
 Five additional numerical tests cover reflection, complex Fresnel, BRDF reciprocity, sampled energy conservation, and relief normals. Two additional browser assertions check WebGL errors and compare the production shader Fresnel/Smith functions with CPU calculations. See [physics scope and limits](PHYSICS.md). The optical model is physically motivated; the animation remains procedural.
+
+## Smooth relief and motion update — 2026-11-01
+
+- TypeScript, production build and **26 automated tests** pass. The added numerical test checks cap symmetry, finite normalized values and preservation of sub-byte normal precision.
+- **22/22 liquid browser checks pass**, including actual half-float sampling, row orientation and restoration of the texture after WebGL context loss. Restoration is requested after the loss-event dispatch completes.
+- Manual preview checks cover the smooth leaf, star and ring, paused motion and the live studio lighting. The README screenshot shows the current renderer.
+- Geometry now uses a coarse-to-fine Poisson cap, float normals and a continuous shading basis; lighting uses soft panels and 48 GGX samples. These reduce the old faceting and jagged highlights. They do not establish pixel equivalence or a physical fluid simulation.

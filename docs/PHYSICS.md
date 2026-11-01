@@ -5,10 +5,10 @@ This independent renderer replaces the earlier UV color bands with reflected lig
 ## Rendering pipeline
 
 1. The geometry-only SVG decoder or raster importer produces an alpha mask.
-2. A distance field builds rounded relief. Smoothed finite differences produce outward surface normals; transparent holes remain empty. Normal strength is approximately independent of input resolution.
-3. A procedural height wave perturbs the normal, without moving the logo silhouette.
-4. Reflected rays sample an analytic studio environment: bright panels, a ceiling strip and a cooler fill.
-5. A GGX microfacet conductor model weights each reflected contribution using exact unpolarized complex-index Fresnel and separable Smith masking/shadowing. The integrator takes 24 deterministic importance samples per pixel.
+2. A coarse-to-fine Poisson solve (`−Δu = 1`, zero boundary) builds a rounded cap with height `2√u`. A small separable filter smooths raster boundaries before finite differences produce outward normals. The solve is capped at 256 pixels on its longest dimension; original-resolution alpha preserves silhouette coverage and holes. Normals are uploaded as linear RGBA16F data, avoiding the previous eight-bit quantization.
+3. Three directional analytic height waves perturb the normal through their derivatives, without moving the logo silhouette. A continuous tangent basis avoids near-pole orientation jumps.
+4. Reflected rays sample an analytic studio environment: soft rectangular panels, a ceiling strip, warm fill and hemispherical ambient illumination.
+5. A GGX microfacet conductor model weights each reflected contribution using exact unpolarized complex-index Fresnel and separable Smith masking/shadowing. The integrator takes 48 deterministic importance samples per pixel.
 6. Linear reflected radiance receives Reinhard display compression and sRGB encoding. Premultiplied alpha preserves the mask coverage when composited.
 
 The BRDF is `F(V·H) D(N·H) G(N·V,N·L) / (4 (N·V) (N·L))`, with `H = normalize(V+L)` and GGX width `alpha = roughness²`. Back-facing view/light directions contribute zero. This is a single-scattering model; roughness can lose energy through unmodeled multiple scattering.
@@ -26,7 +26,7 @@ Names and defaults preserve the observed interface. The mapping below is LuxLeaf
 | Pattern Blur | Roughness `clamp(0.08 + 8 × value, 0.05, 0.7)` | Spreads specular reflection |
 | Liquify | Amplitude of analytic normal perturbation | Procedural deformation, not simulated fluid |
 | Speed | Multiplier on elapsed animation time; zero pauses | Controls wave evolution |
-| Pattern Scale | Density of studio light panels | Changes the reflected environment |
+| Pattern Scale | Angular width and spacing of studio light panels | Changes the reflected environment |
 
 These optical constants were selected for appearance. They are not a measured dataset for silver, chrome, mercury or another named material.
 
@@ -34,12 +34,12 @@ These optical constants were selected for appearance. They are not a measured da
 
 `npm run verify` includes tests for unit reflected rays, the analytic normal-incidence Fresnel limit, grazing reflectance, finite bounded Fresnel values, BRDF reciprocity, back-face rejection, and relief normal orientation/resolution behavior. Independent hemisphere quadrature checks that reflected energy stays below incident energy for nine roughness/view-angle combinations (with a 0.5% numerical tolerance).
 
-Open `/checks-liquid.html` and run its checks to compare the actual GPU Fresnel and Smith functions against CPU calculations at four parameter points, within two 8-bit channel increments. The browser suite also exercises each control, six shapes, upload, export, sharing, resource disposal and WebGL errors. This is a local Chromium check, not a cross-GPU certification.
+Open `/checks-liquid.html` and run its checks to compare the actual GPU Fresnel and Smith functions against CPU calculations at four parameter points, within two 8-bit channel increments. The browser suite also exercises each control, six shapes, upload, export, sharing, resource disposal and WebGL errors. Additional GPU checks verify sub-byte normal precision, row orientation and texture restoration after a deliberately lost context. This is a local Chromium check, not a cross-GPU certification.
 
 ## Remaining limits
 
-- Twenty-four samples approximate the lighting integral. Very sharp lights and rough surfaces can show sampling structure; the CPU energy test does not prove every finite-sample GPU result energy conserving.
-- Eight-bit relief normals, finite mask resolution and medial-axis smoothing can leave contour artifacts. Complex asymmetric logos need broader visual regression coverage.
+- Forty-eight samples approximate the lighting integral. Very sharp lights and rough surfaces can show sampling structure; the CPU energy test does not prove every finite-sample GPU result energy conserving.
+- Finite mask resolution and the 256-pixel geometry grid can soften very fine details. Half-float normals reduce banding but do not eliminate all discretization. Complex asymmetric logos need broader visual regression coverage.
 - There is no volumetric refraction, self-occlusion, ray-traced cast shadow, spectral rendering or measured environment map.
 - Motion does not solve mass conservation, viscosity, gravity or surface tension. A physically simulated liquid would require a separate dynamics model and validation.
 - Exact reference pixels, timing, supported SVG coverage and original service compatibility remain unverified. The geometry decoder intentionally rejects executable and externally referenced SVG content.

@@ -51,12 +51,7 @@ export function validateLiquid(value: unknown): LiquidSettings {
   return result;
 }
 export type LiquidExample =
-  | "leaf"
-  | "circle"
-  | "diamond"
-  | "star"
-  | "ring"
-  | "wave";
+  "leaf" | "circle" | "diamond" | "star" | "ring" | "wave";
 export const liquidExamples: LiquidExample[] = [
   "leaf",
   "circle",
@@ -90,14 +85,14 @@ export class LiquidMark {
   private logo = "";
   constructor(
     canvas: HTMLCanvasElement,
-    settings: Partial<LiquidSettings> = {}
+    settings: Partial<LiquidSettings> = {},
   ) {
     this.settings = validateLiquid(settings);
     this.surface = new Surface(canvas, liquidFragment);
     if (this.surface.status !== "ready") {
       this.surface.destroy();
       throw Error(
-        "WebGL2 is unavailable; this browser cannot render the liquid effect"
+        "WebGL2 is unavailable; this browser cannot render the liquid effect",
       );
     }
     this.update(settings);
@@ -123,13 +118,7 @@ export class LiquidMark {
       mode: "auto",
     });
     this.logo = canvas.toDataURL();
-    this.surface.setImage(
-      new ImageData(
-        new Uint8ClampedArray(mask.pixels),
-        canvas.width,
-        canvas.height
-      )
-    );
+    this.surface.setLinearField(mask.field, canvas.width, canvas.height);
     this.surface.set({ uImageSize: [canvas.width, canvas.height] });
   }
   async loadSVG(source: string) {
@@ -199,7 +188,7 @@ export function validateLiquidProject(value: unknown): LiquidProject {
   const x = value as Record<string, unknown>;
   if (
     Object.keys(x).some(
-      (k) => !["version", "kind", "settings", "background", "logo"].includes(k)
+      (k) => !["version", "kind", "settings", "background", "logo"].includes(k),
     ) ||
     x.version !== 1 ||
     x.kind !== "liquid-logo"
@@ -238,6 +227,6 @@ export function liquidFromShare(link: string) {
   if (url.hash.length > 200000 || !url.hash.startsWith("#liquid="))
     throw Error("Invalid share link");
   return validateLiquidProject(
-    JSON.parse(decodeURIComponent(url.hash.slice(8)))
+    JSON.parse(decodeURIComponent(url.hash.slice(8))),
   );
 }

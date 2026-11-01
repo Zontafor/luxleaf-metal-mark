@@ -19,3 +19,10 @@
 ## 0.1.0
 
 Initial limited workbench release. It did not establish complete upstream parity.
+
+## Unreleased — smooth conductor surface
+
+- Replace distance-field ridges with a coarse-to-fine Poisson cap and continuous normals.
+- Preserve linear relief fields in RGBA16F textures across GPU context recovery.
+- Use soft studio panels, a continuous tangent basis, three analytic motion waves and 48 GGX samples.
+- Add symmetry/precision and GPU texture-recovery checks; retain the existing API and license notices.

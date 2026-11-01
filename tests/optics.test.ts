@@ -31,7 +31,7 @@ test("complex conductor Fresnel agrees with the analytic normal-incidence limit"
   ])
     close(
       conductorFresnel(1, eta, k),
-      ((eta - 1) ** 2 + k * k) / ((eta + 1) ** 2 + k * k)
+      ((eta - 1) ** 2 + k * k) / ((eta + 1) ** 2 + k * k),
     );
   close(conductorFresnel(0, 0.2, 3.4), 1);
   close(conductorFresnel(0.3, 1, 0), 0);
@@ -76,7 +76,7 @@ test("hemispherical reflected energy does not exceed incident energy", () => {
             (conductorBRDF(
               v,
               [s * Math.cos(phi), s * Math.sin(phi), c],
-              roughness
+              roughness,
             ) *
               c *
               2 *
@@ -87,7 +87,7 @@ test("hemispherical reflected energy does not exceed incident energy", () => {
       }
       assert.ok(
         energy > 0 && energy <= 1.005,
-        `roughness=${roughness}, view=${cosine}: energy=${energy}`
+        `roughness=${roughness}, view=${cosine}: energy=${energy}`,
       );
     }
 });
@@ -108,7 +108,7 @@ test("rounded relief retains holes and gives outward, approximately resolution-i
     pixels: Uint8ClampedArray,
     size: number,
     x: number,
-    y: number
+    y: number,
   ) => [
     (pixels[(y * size + x) * 4 + 1] / 255) * 2 - 1,
     (pixels[(y * size + x) * 4 + 2] / 255) * 2 - 1,
@@ -125,9 +125,27 @@ test("rounded relief retains holes and gives outward, approximately resolution-i
   const faint = disk(64);
   for (let i = 3; i < faint.length; i += 4) if (faint[i]) faint[i] = 100;
   const defaultThreshold = buildRelief(faint, 64, 64);
-  const lowThreshold = buildRelief(faint, 64, 64, {threshold: 0.2});
+  const lowThreshold = buildRelief(faint, 64, 64, { threshold: 0.2 });
   close(normal(defaultThreshold.pixels, 64, 47, 32)[0], 0, 0.01);
   assert.ok(normal(lowThreshold.pixels, 64, 47, 32)[0] > 0.1);
   assert.equal(lowThreshold.pixels[(32 * 64 + 47) * 4 + 3], 100);
+});
 
+test("smooth relief is symmetric, finite and retains sub-byte normal precision", () => {
+  const result = buildRelief(disk(128), 128, 128);
+  assert.ok(result.solver.width <= 256 && result.solver.height <= 256);
+  for (const value of result.field)
+    assert.ok(Number.isFinite(value) && value >= 0 && value <= 1);
+  for (let x = 25; x < 60; x++) {
+    const left = result.field[(64 * 128 + x) * 4 + 1];
+    const right = result.field[(64 * 128 + 127 - x) * 4 + 1];
+    close(left + right, 1, 0.012);
+  }
+  assert.ok(
+    result.field.some(
+      (v, i) => i % 4 === 1 && Math.abs(v * 255 - Math.round(v * 255)) > 0.1,
+    ),
+  );
+  const center = result.field[(64 * 128 + 64) * 4 + 1];
+  close(center, 0.5, 0.03);
 });

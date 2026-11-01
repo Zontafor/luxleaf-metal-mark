@@ -6,6 +6,11 @@ export class Surface {
   private program: WebGLProgram | null = null;
   private texture: WebGLTexture | null = null;
   private image: TexImageSource | null = null;
+  private field: {
+    pixels: Float32Array;
+    width: number;
+    height: number;
+  } | null = null;
   private raf = 0;
   private last = 0;
   private elapsed = 0;
@@ -77,7 +82,8 @@ export class Surface {
       this.program = p;
       this.status = "ready";
       this.canvas.dataset.renderer = "webgl2";
-      if (this.image) this.setImage(this.image);
+      if (this.field) this.uploadField();
+      else if (this.image) this.setImage(this.image);
     } catch {
       if (p) gl.deleteProgram(p);
       this.status = "fallback";
@@ -148,6 +154,7 @@ export class Surface {
   setImage(image: TexImageSource) {
     if (this.dead) throw new Error("Surface disposed");
     this.image = image;
+    this.field = null;
     const gl = this.gl;
     if (!gl || !this.program) return;
     if (!this.texture) this.texture = gl.createTexture();
@@ -159,6 +166,54 @@ export class Surface {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
     this.draw();
+  }
+  /** Upload linear data as a half-float texture, preserving smooth normal gradients. */
+  setLinearField(pixels: Float32Array, width: number, height: number) {
+    if (this.dead) throw new Error("Surface disposed");
+    if (
+      !Number.isInteger(width) ||
+      !Number.isInteger(height) ||
+      width < 1 ||
+      height < 1 ||
+      width * height > 4194304 ||
+      pixels.length !== width * height * 4
+    )
+      throw new Error("Invalid field dimensions");
+    const flipped = new Float32Array(pixels.length);
+    for (let y = 0; y < height; y++)
+      for (let x = 0; x < width * 4; x++) {
+        const value = pixels[y * width * 4 + x];
+        if (!Number.isFinite(value) || value < 0 || value > 1)
+          throw new Error("Invalid field value");
+        flipped[(height - 1 - y) * width * 4 + x] = value;
+      }
+    this.field = { pixels: flipped, width, height };
+    this.image = null;
+    this.uploadField();
+    this.draw();
+  }
+  private uploadField() {
+    const gl = this.gl,
+      field = this.field;
+    if (!gl || !this.program || !field) return;
+    if (!this.texture) this.texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA16F,
+      field.width,
+      field.height,
+      0,
+      gl.RGBA,
+      gl.FLOAT,
+      field.pixels,
+    );
   }
   private draw() {
     const gl = this.gl,
@@ -211,6 +266,7 @@ export class Surface {
     if (this.program) this.gl?.deleteProgram(this.program);
     if (this.texture) this.gl?.deleteTexture(this.texture);
     this.image = null;
+    this.field = null;
     this.status = "disposed";
     this.canvas.dataset.renderer = "disposed";
   }

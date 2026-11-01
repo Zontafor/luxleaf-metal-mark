@@ -42,13 +42,13 @@ document.querySelector("#run")!.addEventListener("click", async () => {
         canvas.height,
         gl.RGBA,
         gl.UNSIGNED_BYTE,
-        pixels
+        pixels,
       );
       check(
         shape + " renders colored and transparent pixels",
         new Set(pixels).size > 12 &&
           pixels.some((x, i) => i % 4 === 3 && x === 0) &&
-          pixels.some((x, i) => i % 4 === 3 && x > 0)
+          pixels.some((x, i) => i % 4 === 3 && x > 0),
       );
     }
     const gl = canvas.getContext("webgl2")!,
@@ -61,7 +61,7 @@ document.querySelector("#run")!.addEventListener("click", async () => {
           canvas.height,
           gl.RGBA,
           gl.UNSIGNED_BYTE,
-          a
+          a,
         );
         return a;
       };
@@ -77,7 +77,7 @@ document.querySelector("#run")!.addEventListener("click", async () => {
       r.update({ [key]: value });
       check(
         key + " independently changes rendered output",
-        read().some((v, i) => v !== before[i])
+        read().some((v, i) => v !== before[i]),
       );
     }
     const svgFile = new File(
@@ -85,12 +85,12 @@ document.querySelector("#run")!.addEventListener("click", async () => {
         '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><circle cx="32" cy="32" r="24"/></svg>',
       ],
       "own.svg",
-      { type: "image/svg+xml" }
+      { type: "image/svg+xml" },
     );
     await r.load(svgFile);
     check(
       "uploaded SVG uses the independent decoder",
-      r.exportLogo().startsWith("data:image/png;base64,")
+      r.exportLogo().startsWith("data:image/png;base64,"),
     );
     const png = await r.exportPNG();
     await r.load(new File([png], "own.png", { type: "image/png" }));
@@ -98,7 +98,7 @@ document.querySelector("#run")!.addEventListener("click", async () => {
     const blob = await r.exportPNG();
     check(
       "PNG export contains rendered output",
-      blob.type === "image/png" && blob.size > 100
+      blob.type === "image/png" && blob.size > 100,
     );
     // A share link is bounded; original vector intake yields a compact embedded PNG.
     await r.load(svgFile);
@@ -112,30 +112,123 @@ document.querySelector("#run")!.addEventListener("click", async () => {
     check(
       "share retains logo and exact settings",
       JSON.stringify(liquidFromShare(liquidShare(project, location.href))) ===
-        JSON.stringify(project)
+        JSON.stringify(project),
     );
     check("rendering has no WebGL errors", gl.getError() === gl.NO_ERROR);
     // Exercise the actual production GLSL helpers against independently evaluated CPU math.
     const opticalCanvas = document.createElement("canvas");
     opticalCanvas.style.cssText = "width:8px;height:8px";
     document.body.append(opticalCanvas);
-    const opticalSurface = new Surface(opticalCanvas,
-      liquidFragment.slice(0, liquidFragment.indexOf("vec3 studio")) + `
+    const opticalSurface = new Surface(
+      opticalCanvas,
+      liquidFragment.slice(0, liquidFragment.indexOf("vec3 studio")) +
+        `
       uniform vec4 uProbe;
-      void main(){frag=vec4(fresnel(uProbe.x,uProbe.y,uProbe.z),masking(uProbe.x,uProbe.w),0.,1.);}`);
+      void main(){frag=vec4(fresnel(uProbe.x,uProbe.y,uProbe.z),masking(uProbe.x,uProbe.w),0.,1.);}`,
+    );
     try {
       const opticalGL = opticalCanvas.getContext("webgl2")!;
       let maxError = 0;
-      for (const probe of [[1,.32,3.4,.1],[.5,.32,3.4,.25],[.02,.14,2.8,.6],[.8,1.5,.5,.8]]) {
-        opticalSurface.set({uProbe:probe});
+      for (const probe of [
+        [1, 0.32, 3.4, 0.1],
+        [0.5, 0.32, 3.4, 0.25],
+        [0.02, 0.14, 2.8, 0.6],
+        [0.8, 1.5, 0.5, 0.8],
+      ]) {
+        opticalSurface.set({ uProbe: probe });
         const pixel = new Uint8Array(4);
-        opticalGL.readPixels(0,0,1,1,opticalGL.RGBA,opticalGL.UNSIGNED_BYTE,pixel);
-        maxError = Math.max(maxError,Math.abs(pixel[0]/255-conductorFresnel(probe[0],probe[1],probe[2])),
-          Math.abs(pixel[1]/255-smithMask(probe[0],probe[3])));
+        opticalGL.readPixels(
+          0,
+          0,
+          1,
+          1,
+          opticalGL.RGBA,
+          opticalGL.UNSIGNED_BYTE,
+          pixel,
+        );
+        maxError = Math.max(
+          maxError,
+          Math.abs(
+            pixel[0] / 255 - conductorFresnel(probe[0], probe[1], probe[2]),
+          ),
+          Math.abs(pixel[1] / 255 - smithMask(probe[0], probe[3])),
+        );
       }
-      check("production GPU Fresnel and masking agree with CPU within 2/255",
-        opticalSurface.status === "ready" && opticalGL.getError() === opticalGL.NO_ERROR && maxError < 2/255);
-    } finally {opticalSurface.destroy(); opticalCanvas.remove();}
+      check(
+        "production GPU Fresnel and masking agree with CPU within 2/255",
+        opticalSurface.status === "ready" &&
+          opticalGL.getError() === opticalGL.NO_ERROR &&
+          maxError < 2 / 255,
+      );
+    } finally {
+      opticalSurface.destroy();
+      opticalCanvas.remove();
+    }
+    const precisionCanvas = document.createElement("canvas");
+    precisionCanvas.style.cssText = "width:8px;height:8px";
+    document.body.append(precisionCanvas);
+    const precision = new Surface(
+      precisionCanvas,
+      `#version 300 es
+      precision highp float; in vec2 uv; uniform sampler2D uImage; out vec4 frag;
+      void main(){frag=vec4((texture(uImage,vec2(.25,.75)).g-.5)*256.,(texture(uImage,vec2(.25,.25)).g-.5)*256.,0.,1.);}`,
+    );
+    try {
+      const values = new Float32Array(16).fill(0.5);
+      values[1] = 0.5005;
+      values[9] = 0.5015;
+      for (let i = 3; i < 16; i += 4) values[i] = 1;
+      precision.setLinearField(values, 2, 2);
+      const pgl = precisionCanvas.getContext("webgl2")!,
+        pixel = new Uint8Array(4);
+      const readPrecision = () => {
+        pgl.readPixels(0, 0, 1, 1, pgl.RGBA, pgl.UNSIGNED_BYTE, pixel);
+        return (
+          pixel[0] > 25 &&
+          pixel[0] < 40 &&
+          pixel[1] > 85 &&
+          pixel[1] < 105 &&
+          pgl.getError() === pgl.NO_ERROR
+        );
+      };
+      check(
+        "half-float normals preserve sub-byte detail and top/bottom orientation",
+        readPrecision(),
+      );
+      const loss = pgl.getExtension("WEBGL_lose_context");
+      if (!loss) throw Error("Context loss test extension unavailable");
+      const event = (name: string) =>
+        new Promise<void>((resolve, reject) => {
+          const timer = setTimeout(
+            () => reject(Error("Timed out: " + name)),
+            5000,
+          );
+          precisionCanvas.addEventListener(
+            name,
+            () => {
+              clearTimeout(timer);
+              resolve();
+            },
+            { once: true },
+          );
+        });
+      const lost = event("webglcontextlost");
+      loss.loseContext();
+      await lost;
+      const restored = event("webglcontextrestored");
+      // Return from the loss-event dispatch before requesting restoration.
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      loss.restoreContext();
+      await restored;
+      precision.set({});
+      check(
+        "context restoration recovers the floating-point relief texture",
+        readPrecision(),
+      );
+    } finally {
+      precision.destroy();
+      precisionCanvas.remove();
+    }
     r.destroy();
     check("renderer releases resources", r.surface.status === "disposed");
     out.textContent = lines.join("\n") + "\nALL PASSED: " + lines.length;

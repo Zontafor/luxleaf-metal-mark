@@ -57,7 +57,7 @@ The defaults were visible in the reference screenshot. Range limits are LuxLeaf 
 
 ## Metal appearance
 
-The current renderer derives rounded surface normals from the logo mask and reflects procedural studio lights through a GGX conductor model. Roughness spreads the reflections; angle-dependent Fresnel reflectance controls their intensity. Transparent holes and anti-aliased edges retain coverage.
+The current renderer solves a smooth rounded surface inside the logo mask, preserves its normals in a half-float texture and reflects soft studio panels through a 48-sample GGX conductor model. This update removes the old distance-field ridges and reduces quantization bands in the reflections. Roughness spreads the reflections; angle-dependent Fresnel reflectance controls their intensity. Transparent holes and anti-aliased edges retain coverage.
 
 [Physics and control mapping](docs/PHYSICS.md) documents the equations, numerical checks and limits. Motion is a procedural surface wave. The optical constants are artistic choices, and exact reference appearance has not been established.
 
@@ -68,7 +68,7 @@ The current renderer derives rounded surface normals from the logo mask and refl
 | Local route | Purpose | Source |
 |---|---|---|
 | `/` | Six-control liquid editor | [Editor](demo/liquid.tsx) |
-| `/checks-liquid.html` | 20 liquid behavior checks | [Checks](demo/checks-liquid.ts) |
+| `/checks-liquid.html` | 22 liquid behavior checks | [Checks](demo/checks-liquid.ts) |
 | `/advanced.html` | Previous studio and project workflow | [Studio](demo/advanced.tsx) |
 
 ## Verification and license
@@ -78,7 +78,7 @@ npm run verify
 npm run verify:package
 ```
 
-TypeScript, production build and 25 automated tests passed; 20 separate browser checks cover rendering, control effects, image input, export, sharing, GPU errors and disposal. [Validation notes](docs/VALIDATION.md) explain remaining gaps.
+TypeScript, production build and 26 automated tests passed; 22 separate browser checks cover rendering, control effects, image input, export, sharing, GPU errors and disposal. [Validation notes](docs/VALIDATION.md) explain remaining gaps.
 
 Original LuxLeaf code remains under the [Michelle L. Wu proprietary license](LICENSE). No Paper implementation source, shader, parser or brand artwork was copied. Dependencies retain their own [licenses](THIRD_PARTY_NOTICES.md).
 
