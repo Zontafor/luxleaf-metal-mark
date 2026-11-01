@@ -34,3 +34,7 @@ Initial limited workbench release. It did not establish complete upstream parity
 - Composite the selected background into PNG/video exports; retain a transparent PNG action and compatible renderer API.
 - Explain paused motion and prevent accidental still-video exports at zero speed.
 - Add background/coverage regressions and a recorded SentiLeaf demo; source remains private.
+
+## Repository visibility — 2026-11-01
+
+- Reopen the repository publicly with the latest SentiLeaf implementation and recordings. Earlier private-development entries describe the state at that time. This does not publish a new registry package or change license terms.

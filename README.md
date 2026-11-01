@@ -10,7 +10,7 @@
 
 *Actual local editor. [View its source](demo/liquid.tsx). Exact pixel and original server-API equivalence are not established.*
 
-This is private development source, version `0.3.0-dev.0` (unpublished). `LiquidMark` and the new conductor renderer are **not** in the previously published 0.2.0 registry package. The earlier `MetalCanvas` and `MetalMark` API remains available; its [package guide](docs/LEGACY_PACKAGE.md) is preserved separately. Nothing in this update publishes a package or makes the repository public.
+This is public development source, version `0.3.0-dev.0` (unpublished). `LiquidMark` and the new conductor renderer are **not** in the previously published 0.2.0 registry package. The earlier `MetalCanvas` and `MetalMark` API remains available; its [package guide](docs/LEGACY_PACKAGE.md) is preserved separately. The repository is public again for inspection and local use under its stated license; this update does not publish a registry package.
 
 ## Run the editor
 

@@ -26,4 +26,4 @@ The checked clip contains 295 frames at 30 fps (9.83 seconds), exported to 960 Ã
 
 Background estimation targets transparent artwork or flat backdrops, not arbitrary photographs. Nonuniform opaque backgrounds retain the luminance fallback. Thin lettering still depends on source resolution and the relief grid; this is a visual conductor effect with procedural motion, not a physical liquid simulation. The original uploaded raster remains intact for project export and reprocessing.
 
-The public showcase receives only the recorded SentiLeaf media and descriptive documentation. Renderer source stays private. SentiLeaf artwork is user supplied; this demonstration grants no separate trademark rights.
+The public showcase receives only the recorded SentiLeaf media and descriptive documentation. The renderer repository is public again under its stated proprietary license. SentiLeaf artwork is user supplied; this demonstration grants no separate trademark rights.
