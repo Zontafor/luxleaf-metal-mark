@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — behavior parity
+
+- Add an independent liquid renderer and editor with the six observed controls and defaults.
+- Add background selection, image intake, original sample shapes and portable liquid projects.
+- Retain the previous API and studio; document the distinct project schemas.
+- Do not claim exact pixel or original server API equivalence.
+
 ## 0.2.0 — 2026-11-01
 
 - Original implementation: No Paper Design source, shader or assets are included. This package is independently implemented; it is not an exact recreation or API-compatible fork of that restricted product.

@@ -12,6 +12,7 @@ export default defineConfig({
         checks: resolve("demo/checks.html"),
         advanced: resolve("demo/advanced.html"),
         expanded: resolve("demo/checks-expanded.html"),
+        liquid: resolve("demo/checks-liquid.html"),
       },
     },
   },

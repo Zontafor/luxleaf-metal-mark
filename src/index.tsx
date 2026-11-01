@@ -255,3 +255,8 @@ export * from "./mask.js";
 export * from "./svg.js";
 export * from "./project.js";
 export * from "./recording.js";
+
+export * from "./liquid.js";
+
+export * from "./optics.js";
+export * from "./relief.js";
