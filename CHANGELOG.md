@@ -1,7 +1,9 @@
 # Changelog
 
-## Unreleased — behavior parity
+## 0.3.0-dev.0 — unpublished development
 
+- Replace UV color bands with rounded relief and GGX conductor reflections, with numerical and GPU validation.
+- Honor custom relief thresholds while retaining silhouette alpha.
 - Add an independent liquid renderer and editor with the six observed controls and defaults.
 - Add background selection, image intake, original sample shapes and portable liquid projects.
 - Retain the previous API and studio; document the distinct project schemas.

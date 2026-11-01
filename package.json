@@ -1,10 +1,10 @@
 {
   "name": "@zontafor/luxleaf-metal-mark",
-  "version": "0.2.0",
+  "version": "0.3.0-dev.0",
   "type": "module",
   "license": "LicenseRef-Proprietary",
   "author": "Michelle L. Wu",
-  "description": "Original distance-field logo rendering with SVG intake, portable projects and video export.",
+  "description": "Independent LuxLeaf conductor logo renderer with rounded relief, image intake, portable projects and exports.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

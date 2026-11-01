@@ -1,4 +1,4 @@
-# Validation — v0.2.0
+# Validation — development source
 
 Verification date: 2026-11-01. Node 24.2.0 on macOS; browser checks use the Codex in-app Chromium surface.
 
