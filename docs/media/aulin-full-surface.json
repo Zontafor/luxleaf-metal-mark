@@ -1,0 +1,24 @@
+{
+  "recorded": "2026-11-01",
+  "capture": "Actual AULIN editor; original chrome shader, full-image coverage",
+  "video": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 960,
+        "avg_frame_rate": "30/1",
+        "nb_read_frames": "295"
+      }
+    ],
+    "format": {
+      "duration": "9.833333",
+      "size": "1556629"
+    }
+  },
+  "meanFrameChangeSeconds1To8": 24.89,
+  "sha256": "a8749fb8232f1764f652c43edc8afede479661bab65a3c4da214bd6f086d4d11",
+  "audio": false
+}

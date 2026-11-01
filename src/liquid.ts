@@ -3,6 +3,7 @@
 import { Surface } from "./surface.js";
 import { buildRelief } from "./relief.js";
 import { liquidFragment } from "./liquid-shader.js";
+import { buildImageRelief } from "./image-relief.js";
 import { prepareLogo } from "./logo-input.js";
 import { decodeSVG } from "./svg.js";
 export interface LiquidSettings {
@@ -78,12 +79,23 @@ export function exampleSVG(shape: LiquidExample) {
   );
 }
 
+export type ArtworkMode = "auto" | "cutout" | "relief";
 export class LiquidMark {
   readonly surface: Surface;
   private settings: LiquidSettings;
   private generation = 0;
   private dead = false;
   private logo = "";
+  private inputCanvas: HTMLCanvasElement | null = null;
+  private inputMode: ArtworkMode = "auto";
+  artworkTreatment: "cutout" | "relief" = "cutout";
+  setInputMode(mode: ArtworkMode) {
+    if (!["auto", "cutout", "relief"].includes(mode))
+      throw Error("Invalid artwork mode");
+    if (this.dead) throw Error("Renderer disposed");
+    this.inputMode = mode;
+    if (this.inputCanvas) this.apply(this.inputCanvas);
+  }
   constructor(
     canvas: HTMLCanvasElement,
     settings: Partial<LiquidSettings> = {},
@@ -115,10 +127,18 @@ export class LiquidMark {
   private apply(canvas: HTMLCanvasElement) {
     const context = canvas.getContext("2d")!,
       rgba = context.getImageData(0, 0, canvas.width, canvas.height);
-    const prepared = prepareLogo(rgba.data, canvas.width, canvas.height);
-    const mask = buildRelief(prepared.pixels, prepared.width, prepared.height, {
-      mode: "alpha",
-    });
+    const prepared =
+      this.inputMode === "relief"
+        ? null
+        : prepareLogo(rgba.data, canvas.width, canvas.height);
+    const relief = this.inputMode === "relief";
+    const mask = relief
+      ? buildImageRelief(rgba.data, canvas.width, canvas.height)
+      : buildRelief(prepared!.pixels, prepared!.width, prepared!.height, {
+          mode: "alpha",
+        });
+    this.inputCanvas = canvas;
+    this.artworkTreatment = relief ? "relief" : "cutout";
     this.logo = canvas.toDataURL();
     this.surface.setLinearField(mask.field, mask.width, mask.height);
     this.surface.set({ uImageSize: [mask.width, mask.height] });
@@ -174,6 +194,7 @@ export class LiquidMark {
     if (this.dead) return;
     this.dead = true;
     ++this.generation;
+    this.inputCanvas = null;
     this.surface.destroy();
   }
 }
@@ -183,6 +204,7 @@ export interface LiquidProject {
   settings: LiquidSettings;
   background: string;
   logo: string;
+  inputMode?: ArtworkMode;
 }
 export function validateLiquidProject(value: unknown): LiquidProject {
   if (!value || typeof value !== "object" || Array.isArray(value))
@@ -190,7 +212,15 @@ export function validateLiquidProject(value: unknown): LiquidProject {
   const x = value as Record<string, unknown>;
   if (
     Object.keys(x).some(
-      (k) => !["version", "kind", "settings", "background", "logo"].includes(k),
+      (k) =>
+        ![
+          "version",
+          "kind",
+          "settings",
+          "background",
+          "logo",
+          "inputMode",
+        ].includes(k),
     ) ||
     x.version !== 1 ||
     x.kind !== "liquid-logo"
@@ -207,7 +237,15 @@ export function validateLiquidProject(value: unknown): LiquidProject {
     !/^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(x.logo)
   )
     throw Error("Invalid embedded logo");
+  if (
+    x.inputMode !== undefined &&
+    !["auto", "cutout", "relief"].includes(x.inputMode as string)
+  )
+    throw Error("Invalid artwork mode");
   return {
+    ...(x.inputMode === undefined
+      ? {}
+      : { inputMode: x.inputMode as ArtworkMode }),
     version: 1,
     kind: "liquid-logo",
     settings: validateLiquid(x.settings),

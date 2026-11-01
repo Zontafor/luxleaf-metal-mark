@@ -38,3 +38,10 @@ Initial limited workbench release. It did not establish complete upstream parity
 ## Repository visibility — 2026-11-01
 
 - Reopen the repository publicly with the latest SentiLeaf implementation and recordings. Earlier private-development entries describe the state at that time. This does not publish a new registry package or change license terms.
+
+## Unreleased — AULIN surface coverage
+
+- Add explicit full-image relief for photographs while preserving the existing chrome shader and motion.
+- Keep AULIN previous-look and full-surface presets, plus the supplied artwork and actual recording.
+- Persist optional artwork mode in version-1 projects without changing older project semantics.
+- Verify whole-image opacity, deformation across four regions and preservation of the prior relief channels.

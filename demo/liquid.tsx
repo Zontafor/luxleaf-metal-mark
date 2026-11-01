@@ -6,6 +6,7 @@ import {
   liquidRanges,
   liquidExamples,
   type LiquidSettings,
+  type ArtworkMode,
   type LiquidProject,
   liquidShare,
   liquidFromShare,
@@ -35,11 +36,14 @@ function App() {
     input = useRef<HTMLInputElement>(null);
   const [settings, set] = useState<LiquidSettings>({ ...liquidDefaults }),
     [background, bg] = useState("gradient"),
+    [inputMode, mode] = useState<ArtworkMode>("auto"),
     [message, status] = useState(""),
     [busy, working] = useState(false),
     [ready, isReady] = useState(false);
   async function restore(project: LiquidProject) {
     const x = validateLiquidProject(project);
+    renderer.current!.setInputMode(x.inputMode ?? "auto");
+    mode(x.inputMode ?? "auto");
     const bytes = Uint8Array.from(atob(x.logo.split(",")[1]), (c) =>
       c.charCodeAt(0),
     );
@@ -91,7 +95,11 @@ function App() {
         if (file.size > 1520000) throw Error("Project too large");
         await restore(JSON.parse(await file.text()));
       } else await renderer.current!.load(file);
-      status("Image loaded");
+      status(
+        renderer.current!.artworkTreatment === "relief"
+          ? "Full-image relief: the entire artwork is opaque metal"
+          : "Logo cutout: background removed",
+      );
       isReady(true);
     } catch (e) {
       status(String(e));
@@ -105,6 +113,7 @@ function App() {
       kind: "liquid-logo",
       settings,
       background,
+      inputMode,
       logo: renderer.current!.exportLogo(),
     };
   }
@@ -136,6 +145,32 @@ function App() {
             <canvas ref={canvas} aria-label="Liquid metal logo" />
           </section>
           <section className="parameters" aria-label="Liquid metal controls">
+            <label className="artwork-mode">
+              Artwork mode{" "}
+              <select
+                aria-label="Artwork mode"
+                value={inputMode}
+                disabled={busy}
+                onChange={(e) => {
+                  const next = e.target.value as ArtworkMode;
+                  try {
+                    renderer.current!.setInputMode(next);
+                    mode(next);
+                    status(
+                      renderer.current!.artworkTreatment === "relief"
+                        ? "Full-image relief: the entire artwork is opaque metal"
+                        : "Logo cutout: background removed",
+                    );
+                  } catch (error) {
+                    status(String(error));
+                  }
+                }}
+              >
+                <option value="auto">Automatic</option>
+                <option value="cutout">Logo cutout</option>
+                <option value="relief">Full-image relief</option>
+              </select>
+            </label>
             <div className="background">
               <span>Background</span>
               <div>
@@ -217,8 +252,9 @@ function App() {
               }}
             />
             <p className="hint">
-              Transparent or flat-color backgrounds are supported. The image
-              backdrop is removed and the logo is fitted to the preview.
+              Transparent or flat-color logos use a cutout. Choose Full-image
+              relief for textured photographs to keep the entire artwork
+              metallic.
             </p>
             <p className="hint">
               {settings.speed === 0
@@ -233,6 +269,8 @@ function App() {
           onClick={async () => {
             working(true);
             try {
+              renderer.current!.setInputMode("auto");
+              mode("auto");
               const response = await fetch("/sentileaf.png");
               if (!response.ok) throw Error("Demo image unavailable");
               await load(
@@ -250,16 +288,66 @@ function App() {
         >
           SentiLeaf demo
         </button>
+        <button
+          disabled={!ready || busy}
+          onClick={async () => {
+            working(true);
+            try {
+              renderer.current!.setInputMode("cutout");
+              mode("cutout");
+              const response = await fetch("/aulin_leather.png");
+              if (!response.ok) throw Error("AULIN image unavailable");
+              await load(
+                new File([await response.blob()], "aulin_leather.png", {
+                  type: "image/png",
+                }),
+              );
+              set({ ...liquidDefaults, speed: 1 });
+            } catch (e) {
+              status(String(e));
+            } finally {
+              working(false);
+            }
+          }}
+        >
+          AULIN previous look
+        </button>
+        <button
+          disabled={!ready || busy}
+          onClick={async () => {
+            working(true);
+            try {
+              renderer.current!.setInputMode("relief");
+              mode("relief");
+              const response = await fetch("/aulin_leather.png");
+              if (!response.ok) throw Error("AULIN image unavailable");
+              await load(
+                new File([await response.blob()], "aulin_leather.png", {
+                  type: "image/png",
+                }),
+              );
+              set({ ...liquidDefaults, speed: 1 });
+            } catch (e) {
+              status(String(e));
+            } finally {
+              working(false);
+            }
+          }}
+        >
+          AULIN full surface
+        </button>
         <nav className="examples" aria-label="Example shapes">
           {liquidExamples.map((shape) => (
             <button
               key={shape}
               disabled={!ready || busy}
-              onClick={() =>
+              onClick={() => {
+                renderer.current!.setInputMode("auto");
+                mode("auto");
                 void renderer.current
                   ?.example(shape)
-                  .catch((e) => status(String(e)))
-              }
+                  .catch((e) => status(String(e)));
+              }}
             >
               <span aria-hidden="true">
                 {
@@ -326,7 +414,7 @@ function App() {
                 try {
                   download(
                     await recordPreview(canvas.current!, background),
-                    "sentileaf-liquid-metal.webm",
+                    "luxleaf-liquid.webm",
                   );
                   status("Video saved with the selected background");
                 } catch (e) {

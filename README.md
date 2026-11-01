@@ -4,6 +4,16 @@
 
 [Run the editor](#run-the-editor) · [Renderer example](#renderer-example) · [Controls](#controls) · [Published-package guide](#published-package-guide)
 
+## AULIN full-surface demo
+
+[![AULIN full-surface chrome motion](docs/media/aulin-full-surface.gif)](docs/media/aulin-full-surface.mp4)
+
+[Watch AULIN MP4](docs/media/aulin-full-surface.mp4) · [Original WebM](docs/media/aulin-full-surface.webm) · [Artwork modes and reproduction](docs/AULIN.md)
+
+The original chrome shader and motion are retained. **AULIN full surface** keeps the whole photograph metallic; **AULIN previous look** restores its earlier cutout treatment.
+
+## SentiLeaf demo
+
 [![SentiLeaf in liquid metal motion](docs/media/sentileaf-preview.gif)](docs/media/sentileaf-liquid-metal.mp4)
 
 [Watch MP4](docs/media/sentileaf-liquid-metal.mp4) · [Original WebM](docs/media/sentileaf-liquid-metal.webm) · [SentiLeaf demo and export guide](docs/SENTILEAF.md)
@@ -70,7 +80,7 @@ The current renderer solves a smooth rounded surface inside the logo mask, prese
 | Local route | Purpose | Source |
 |---|---|---|
 | `/` | Six-control liquid editor | [Editor](demo/liquid.tsx) |
-| `/checks-liquid.html` | 25 liquid behavior checks | [Checks](demo/checks-liquid.ts) |
+| `/checks-liquid.html` | 28 liquid behavior checks | [Checks](demo/checks-liquid.ts) |
 | `/advanced.html` | Previous studio and project workflow | [Studio](demo/advanced.tsx) |
 
 ## Verification and license
@@ -80,7 +90,7 @@ npm run verify
 npm run verify:package
 ```
 
-TypeScript, production build and 30 automated tests passed; 25 separate browser checks cover rendering, control effects, image input, export, sharing, GPU errors and disposal. [Validation notes](docs/VALIDATION.md) explain remaining gaps.
+TypeScript, production build and 33 automated tests passed; 28 separate browser checks cover rendering, control effects, image input, export, sharing, GPU errors and disposal. [Validation notes](docs/VALIDATION.md) explain remaining gaps.
 
 Original LuxLeaf code remains under the [Michelle L. Wu proprietary license](LICENSE). No Paper implementation source, shader, parser or brand artwork was copied. Dependencies retain their own [licenses](THIRD_PARTY_NOTICES.md).
 

@@ -262,6 +262,65 @@ document.querySelector("#run")!.addEventListener("click", async () => {
       "composited PNG export produces an actual image",
       (await exportPreviewPNG(canvas, "#ffffff")).size > 100,
     );
+    const artwork = await fetch("/aulin_leather.png");
+    if (!artwork.ok) throw Error("AULIN fixture unavailable");
+    const artworkBlob = await artwork.blob();
+    r.setInputMode("relief");
+    await r.load(new File([artworkBlob], "aulin.png", { type: "image/png" }));
+    const opaque = read();
+    let opaqueInterior = true;
+    for (
+      let y = Math.floor(canvas.height * 0.32);
+      y < canvas.height * 0.68;
+      y += 7
+    )
+      for (
+        let x = Math.floor(canvas.width * 0.2);
+        x < canvas.width * 0.8;
+        x += 7
+      )
+        if (opaque[(y * canvas.width + x) * 4 + 3] !== 255)
+          opaqueInterior = false;
+    check(
+      "AULIN full-image relief shades every sampled interior pixel opaquely",
+      opaqueInterior && r.artworkTreatment === "relief",
+    );
+    r.update({ liquify: 0 });
+    const still = read();
+    r.update({ liquify: 0.14 });
+    const flowing = read();
+    let regions = 0;
+    for (let quadrant = 0; quadrant < 4; quadrant++) {
+      let change = 0;
+      const x0 = quadrant % 2 ? 0.5 : 0.2,
+        x1 = quadrant % 2 ? 0.8 : 0.5,
+        y0 = quadrant < 2 ? 0.32 : 0.5,
+        y1 = quadrant < 2 ? 0.5 : 0.68;
+      for (
+        let y = Math.floor(canvas.height * y0);
+        y < canvas.height * y1;
+        y += 4
+      )
+        for (
+          let x = Math.floor(canvas.width * x0);
+          x < canvas.width * x1;
+          x += 4
+        ) {
+          const i = (y * canvas.width + x) * 4;
+          change += Math.abs(still[i] - flowing[i]);
+        }
+      if (change > 100) regions++;
+    }
+    check(
+      "liquid deformation changes all four regions of the AULIN surface",
+      regions === 4,
+    );
+    r.setInputMode("cutout");
+    check(
+      "previous AULIN cutout appearance remains available",
+      r.artworkTreatment === "cutout" &&
+        read().some((v, i) => i % 4 === 3 && v > 0 && v < 245),
+    );
     r.destroy();
     check("renderer releases resources", r.surface.status === "disposed");
     out.textContent = lines.join("\n") + "\nALL PASSED: " + lines.length;
