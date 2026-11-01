@@ -1,3 +1,9 @@
+# Rebuild provenance — v0.2.0
+
+No restricted Paper Design implementation or assets were copied. All logo processing and shaders in this package are original LuxLeaf implementation.
+
+## Earlier research record
+
 # Private research and provenance
 
 The supplied screen recording identified `paper-design/liquid-logo`. Repository metadata and documentation were reviewed on 2026-11-01 at commit `689bb38a1e0d5a6a8baf2d34847635eefde19994`.

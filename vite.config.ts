@@ -10,6 +10,8 @@ export default defineConfig({
       input: {
         demo: resolve("demo/index.html"),
         checks: resolve("demo/checks.html"),
+        advanced: resolve("demo/advanced.html"),
+        expanded: resolve("demo/checks-expanded.html"),
       },
     },
   },

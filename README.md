@@ -1,78 +1,63 @@
 # LuxLeaf Metal Mark
 
-An original local logo renderer with metallic reflections, alpha-mask import, live controls and transparent PNG export.
+Original distance-field logo rendering with SVG intake, portable projects and video export.
 
-**Private v0.1.0 product release.** Original LuxLeaf code is proprietary to Michelle L. Wu. Licensed foundations retain their own rights. This is a functional initial product with an explicit supported scope; it is not a full replacement for the upstream ecosystem.
+Version **0.2.0** expands the initial workbench into a broader package. Original LuxLeaf additions are proprietary to **Michelle L. Wu**. The included licensed foundations retain their own licenses and attribution. Public source visibility does not grant a license to LuxLeaf's proprietary additions.
 
-## Run the workbench
+## Workbench
 
 ```sh
 npm ci --ignore-scripts
 npm run verify
-npm run dev -- --port 4177
+npm run verify:package
+npm run dev
 ```
 
-Use Node 22.12+ (Node 24 recommended). Open the local URL printed by Vite. The demo includes live settings, reset and preset import/export. GPU products also export PNG. Nothing is sent to a server by the demo. Vite binds to loopback by default.
+Use Node 24+. Open `/advanced.html` for the expanded studio, `/` for the compact demonstration, and `/checks-expanded.html` for real browser acceptance checks. These pages run locally. Consumer applications must supply authentication, tenancy and deployment controls appropriate to their use.
 
-## Use the private package
+## Install
 
-Build and create an installable archive:
+The scoped package is `@zontafor/luxleaf-metal-mark`. GitHub Packages requires registry authentication even for public npm packages. Configure your own GitHub credential outside source control, then:
 
 ```sh
-npm run build
-npm pack
-# In an authorized consumer project:
-npm install /absolute/path/to/luxleaf-metal-mark-0.1.0.tgz
+npm install @zontafor/luxleaf-metal-mark@0.2.0 --registry=https://npm.pkg.github.com
 ```
 
-ES modules and TypeScript declarations are included. This package is intentionally marked `private: true`; no public npm publication is configured. Use one compatible React installation in the consumer. Browser components must run on the client; construction of imperative renderers requires the DOM. A preset is data, not executable code.
+GitHub Release `.tgz` attachments provide a separate installable archive. A release attachment alone is not proof of registry publication. See [release procedure](docs/RELEASING.md) for verification commands and the distinction between repository and package visibility.
 
-```tsx
-import { useRef } from 'react';
-import { MetalCanvas, type MetalMark } from '@luxleaf/metal-mark';
+## Package entry points
 
-export function LogoWorkbench() {
-  const renderer = useRef<MetalMark | null>(null);
-  return <>
-    <MetalCanvas style={{ width: '100%', height: 420 }}
-      onReady={value => { renderer.current = value; }} />
-    <input type="file" accept="image/png,image/webp" onChange={async event => {
-      const file = event.target.files?.[0];
-      if (file && renderer.current) {
-        try { await renderer.current.load(file); }
-        catch (error) { console.error('Logo rejected', error); }
-      }
-    }} />
-  </>;
-}
-```
-
-## API
-
-| Export | Contract |
+| Import suffix | Distributed implementation |
 |---|---|
-| `MetalCanvas` | React canvas component; `options`, `onReady(renderer or null)` and canvas attributes, including aria-label. |
-| `new MetalMark(canvas, options)` | Imperative renderer, initially displaying an original generated leaf mask. |
-| `load(file)` | Promise accepting PNG/WebP, 1 byte–8 MiB, decoded dimensions up to 4096 each. Latest load wins. |
-| `update(partial)` | Merge and validate options before setting uniforms. |
-| `exportPNG()` | Promise of image/png Blob with transparent space outside the mask; rejects if unavailable. |
-| `destroy()` | Idempotent cleanup and cancellation of pending image application. |
-| `surface.status` | `ready`, `fallback`, `lost`, `disposed`; canvas `data-renderer` mirrors lifecycle. |
-| `validateImageFile`, `validate`, `serialize`, `deserialize`, `defaults` | Input validation and JSON helpers. |
+| `.` | `./dist/index.js` |
+| `./server` | `./dist/server.js` |
 
-`MetalOptions`: color (six-digit hex), speed (0–2), frequency (1–20), distortion (0–2), contrast (0.3–3), animate (boolean). The logo's alpha channel supplies the mask; opaque backgrounds create a rectangular mask. Exported presets contain effect settings only, never image bytes. React cleans up on unmount; imperative consumers must call `destroy()`.
+## Implemented scope
 
-All numeric fields must be finite and in range. Unknown configuration keys are rejected, and JSON input is limited to 16 KiB. Presets use the v0.1 schema; there is no version-migration promise yet. Exported defaults should be treated as immutable.
+### Original implementation
 
-## Quality and operations
+No Paper Design source, shader or assets are included. This package is independently implemented; it is not an exact recreation or API-compatible fork of that restricted product.
 
-`npm run verify` checks TypeScript, runs 7 unit tests and builds both library and demo. `/checks.html` exposes 8 actual browser integration assertions; open it in the local server and press **Run checks**. Browser checks are manual and are not represented as automated CI coverage. See [validation](docs/VALIDATION.md) for evidence and limits.
+### Image pipeline
 
+Linear-time distance transform, alpha/luminance masks, bevel normals, bounded local PNG/WebP decoding, and a geometry-only SVG sanitizer/rasterizer.
+
+### Studio and persistence
+
+Directional metal reflections, edge/chromatic controls, PNG and WebM exports, portable embedded-logo projects, undo/redo, bounded fragment sharing, authenticated SQLite project CRUD with expiry and opt-in public reads.
+
+### Remaining host verification
+
+The server is a single-process reference adapter, not an enterprise tenant/auth system. Distributed storage, quotas, host rate limits, HTTPS deployment, independent security assessment and broad device/codec certification remain outside this release.
+
+## Verification
+
+The current suite includes **16 unit/integration tests**. The expanded browser page contains **10 assertions**, run separately from headless CI. These counts describe specific checks, not proof of exact feature, pixel or performance parity with another product. See [validation](docs/VALIDATION.md) for evidence and known limits.
+
+The repository includes source, tests, runnable examples, build configuration, architecture notes, dependency notices and release workflows. The npm archive includes source and examples alongside JavaScript and declarations. It intentionally excludes installed dependencies, credentials and local user media.
+
+- [Capability matrix](docs/CAPABILITIES.md)
 - [Architecture and lifecycle](docs/ARCHITECTURE.md)
-- [Capability comparison and known gaps](docs/CAPABILITIES.md)
-- [Private release procedure](docs/RELEASING.md)
-- [Research and provenance](docs/PROVENANCE.md)
+- [Provenance](docs/PROVENANCE.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
-- [Security reporting and data handling](SECURITY.md)
-
-The demo is a workbench for this package. Authentication, tenancy, persistence, payments and deployment infrastructure belong to the integrating application and are not supplied by this browser library.
+- [Security and supported deployment](SECURITY.md)

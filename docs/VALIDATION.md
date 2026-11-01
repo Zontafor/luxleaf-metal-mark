@@ -1,16 +1,24 @@
-# Validation record — 2026-11-01
+# Validation — v0.2.0
 
-Release candidate: 0.1.0. Local environment: macOS, Node 24.2.0, TypeScript 7.0.2, Vite 8.3.5.
+Verification date: 2026-11-01. Node 24.2.0 on macOS; browser checks use the Codex in-app Chromium surface.
 
-| Layer | Evidence |
-|---|---|
-| Type contracts | `npm run typecheck`, strict TypeScript across library, demo and tests. |
-| Unit behavior | 7 passing tests in `tests/contract.test.ts`; validated ranges, unknown-key rejection, malformed input and preset round trip. |
-| Actual browser | 8 passing assertions through `/checks.html` in the desktop in-app browser. These exercise real DOM/GPU lifecycle, not mocked rendering. |
-| Build | ESM and declaration output plus Vite production demo. |
-| Private distribution | `npm pack`, reviewed archive contents, fresh consumer ESM import. |
-| CI | The repository workflow repeats type checks, unit tests, builds and pack inspection on pushes and pull requests. See GitHub Actions for the actual run result. |
+## Reproduce
 
-The browser test implementation is committed beside the demo and can be rerun. It is not automated in the CI workflow. Manual demo inspection confirms a rendered result and working controls; it does not establish cross-browser fidelity, accessibility conformance or performance under load. Motion preference, hidden-document, context-restoration and adversarial media cases require a broader device test campaign before public production use.
+```sh
+npm ci --ignore-scripts
+npm run verify
+npm run verify:package
+npm run dev
+```
 
-`npm ci --ignore-scripts` avoids dependency lifecycle hooks. Registry install reported no known vulnerabilities at review time; this is a point-in-time result, not a security guarantee. The dependency inventory is in `dependencies.json`.
+`verify` checks preserved foundation hashes where applicable, type checks the LuxLeaf code, runs 16 unit/integration tests and builds the library and workbenches. `verify:package` checks export paths and source/notices in the actual tarball, extracts it outside the source tree and imports supported JavaScript entries using the installed dependency tree. The publication workflow additionally installs the package from GitHub's registry into a fresh consumer directory.
+
+Open `/checks-expanded.html` and press **Run expanded checks**. The 10 assertions exercise actual browser functionality. Browser checks are manually invoked, not silently counted as GitHub Actions coverage. The older `/checks.html` remains for regression coverage.
+
+## Limits
+
+Native mobile hosts, Figma/Framer editor hosts, all consumer bundlers, cross-browser pixel equivalence, accessibility audits, load/SLA budgets and independent security review have not all been validated. An upstream source inventory is not an upstream test run. A successful browser run on this machine does not certify every GPU or codec.
+
+## Recorded result
+
+On 2026-11-01 the expanded browser suite completed **10/10 passing assertions** against the production Vite preview. The local unit suite and package import review passed. CI and registry publication status must be checked against the release commit; this document does not assume a queued run succeeded.

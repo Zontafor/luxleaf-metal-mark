@@ -30,6 +30,9 @@ function App() {
   return (
     <>
       <header>
+        <a href="/advanced.html" style={{ color: "inherit" }}>
+          Open full workbench →
+        </a>
         <strong>
           LUXLEAF <small>VISUAL SYSTEMS</small>
         </strong>

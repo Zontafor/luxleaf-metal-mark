@@ -1,10 +1,10 @@
-# Private release procedure
+# Release procedure
 
-1. Use Node 24 and run `npm ci --ignore-scripts` from the committed lockfile.
-2. Run `npm run verify`; inspect every result, then open `/checks.html` in a real browser and run its assertions. Inspect the workbench visually and exercise controls.
-3. Review `npm pack --dry-run --json`. Only the library output, package metadata, docs and notices should ship. No recording, keys, node_modules or unrelated files belong in the archive.
-4. Run `npm pack`, install that archive in a fresh authorized consumer and import its public entry point. Use `npm ls react` to detect incompatible duplicate React installations.
-5. Commit reviewed changes, push to the private Zontafor repository, and verify GitHub Actions at that exact commit.
-6. Tag the reviewed commit and attach the archive and a SHA-256 checksum to a private GitHub release. Never publish this package to a public registry or change repository visibility as part of the release script.
+1. Run `npm ci --ignore-scripts`, `npm run verify`, and `npm run verify:package`.
+2. Run browser checks and inspect the expanded workbench. Record limitations accurately.
+3. Review the actual tarball, licenses, source inventory and credential scan. Commit and push the reviewed source.
+4. Require the Package verification workflow to pass on that commit. Create an immutable version tag and GitHub Release containing the `.tgz` and SHA-256 checksum.
+5. Dispatch **Publish GitHub package**. Its repository-scoped `GITHUB_TOKEN` publishes `@zontafor/luxleaf-metal-mark` and verifies a fresh registry installation. The workflow has package write access only in its publication job.
+6. Verify registry metadata and repository visibility separately. GitHub npm packages initially default to private; public repository visibility does not automatically change package visibility. Public npm packages still require registry authentication. Public release assets are a separate distribution route.
 
-Changes to runtime dependencies require regenerated notices and inventory. Breaking preset or API changes require a documented migration and a version change. The current workflow does not deploy to a live service, issue credentials, or provision paid resources.
+Never put a personal access token in the repository. Do not overwrite an existing version. A version bump requires another verification run.
