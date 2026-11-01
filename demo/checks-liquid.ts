@@ -5,6 +5,9 @@ import {
   liquidShare,
   liquidFromShare,
 } from "../src/liquid";
+import { Surface } from "../src/surface";
+import { liquidFragment } from "../src/liquid-shader";
+import { conductorFresnel, smithMask } from "../src/optics";
 const out = document.querySelector("#result")!;
 document.querySelector("#run")!.addEventListener("click", async () => {
   const lines: string[] = [];
@@ -111,6 +114,28 @@ document.querySelector("#run")!.addEventListener("click", async () => {
       JSON.stringify(liquidFromShare(liquidShare(project, location.href))) ===
         JSON.stringify(project)
     );
+    check("rendering has no WebGL errors", gl.getError() === gl.NO_ERROR);
+    // Exercise the actual production GLSL helpers against independently evaluated CPU math.
+    const opticalCanvas = document.createElement("canvas");
+    opticalCanvas.style.cssText = "width:8px;height:8px";
+    document.body.append(opticalCanvas);
+    const opticalSurface = new Surface(opticalCanvas,
+      liquidFragment.slice(0, liquidFragment.indexOf("vec3 studio")) + `
+      uniform vec4 uProbe;
+      void main(){frag=vec4(fresnel(uProbe.x,uProbe.y,uProbe.z),masking(uProbe.x,uProbe.w),0.,1.);}`);
+    try {
+      const opticalGL = opticalCanvas.getContext("webgl2")!;
+      let maxError = 0;
+      for (const probe of [[1,.32,3.4,.1],[.5,.32,3.4,.25],[.02,.14,2.8,.6],[.8,1.5,.5,.8]]) {
+        opticalSurface.set({uProbe:probe});
+        const pixel = new Uint8Array(4);
+        opticalGL.readPixels(0,0,1,1,opticalGL.RGBA,opticalGL.UNSIGNED_BYTE,pixel);
+        maxError = Math.max(maxError,Math.abs(pixel[0]/255-conductorFresnel(probe[0],probe[1],probe[2])),
+          Math.abs(pixel[1]/255-smithMask(probe[0],probe[3])));
+      }
+      check("production GPU Fresnel and masking agree with CPU within 2/255",
+        opticalSurface.status === "ready" && opticalGL.getError() === opticalGL.NO_ERROR && maxError < 2/255);
+    } finally {opticalSurface.destroy(); opticalCanvas.remove();}
     r.destroy();
     check("renderer releases resources", r.surface.status === "disposed");
     out.textContent = lines.join("\n") + "\nALL PASSED: " + lines.length;

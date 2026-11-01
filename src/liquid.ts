@@ -1,7 +1,8 @@
 // Independently authored LuxLeaf implementation. No Paper implementation code or assets used.
 // Copyright 2026 Michelle L. Wu. See docs/REFERENCE_BEHAVIOR.md for the public behavioral specification.
 import { Surface } from "./surface.js";
-import { processMask } from "./mask.js";
+import { buildRelief } from "./relief.js";
+import { liquidFragment } from "./liquid-shader.js";
 import { decodeSVG } from "./svg.js";
 export interface LiquidSettings {
   refraction: number;
@@ -80,11 +81,7 @@ export function exampleSVG(shape: LiquidExample) {
     "</g></svg>"
   );
 }
-const fragment = `#version 300 es
-precision highp float;in vec2 uv;out vec4 frag;uniform sampler2D uImage;uniform vec2 uResolution,uImageSize;uniform float uTime,uRefraction,uEdge,uPatternBlur,uLiquify,uSpeed,uPatternScale;
-// A continuous reflected-light profile, independently defined from elementary trigonometric fields.
-float lightProfile(float p,float width){float phase=fract(p);float rising=smoothstep(.08-width,.36+width,phase);float falling=1.-smoothstep(.48-width,.57+width,phase);float broad=.12+.78*rising*falling;float line=exp(-pow((phase-.57)/max(.012,width),2.));return clamp(broad+line*.9,0.,1.);}
-void main(){vec2 center=uv-.5;float frame=uResolution.x/uResolution.y,aspect=uImageSize.x/uImageSize.y;vec2 fit=frame>aspect?vec2(aspect/frame,1.):vec2(1.,frame/aspect);vec2 q=center/(fit*.82)+.5;bool outside=any(lessThan(q,vec2(0.)))||any(greaterThan(q,vec2(1.)));vec4 field=texture(uImage,clamp(q,0.,1.));float coverage=outside?0.:field.a;vec2 n=field.gb*2.-1.;float t=uTime*uSpeed;vec2 v=q-.5;float bend=sin(v.x*5.+t*.75)*cos(v.y*4.-t*.6)+.35*sin((v.x+v.y)*8.+t);float contour=sqrt(max(field.r,0.));float coordinate=dot(v,vec2(.34,.94))+uEdge*(contour-.5)*.8+uLiquify*bend;float phase=coordinate*uPatternScale+t*.12+.42;float width=max(uPatternBlur,.0005);float dispersion=uRefraction*(.3+contour*2.);vec3 chrome=vec3(lightProfile(phase+dispersion,width),lightProfile(phase,width),lightProfile(phase-dispersion,width));float dome=clamp(.55+dot(n,vec2(-.35,.55))*.3+contour*.25,.25,1.);chrome=mix(chrome,vec3(.76,.78,.82),.12)*dome;chrome+=pow(1.-contour,5.)*.2;frag=vec4(clamp(chrome,0.,1.),coverage);}`;
+
 export class LiquidMark {
   readonly surface: Surface;
   private settings: LiquidSettings;
@@ -96,7 +93,7 @@ export class LiquidMark {
     settings: Partial<LiquidSettings> = {}
   ) {
     this.settings = validateLiquid(settings);
-    this.surface = new Surface(canvas, fragment);
+    this.surface = new Surface(canvas, liquidFragment);
     if (this.surface.status !== "ready") {
       this.surface.destroy();
       throw Error(
@@ -122,25 +119,17 @@ export class LiquidMark {
   private apply(canvas: HTMLCanvasElement) {
     const context = canvas.getContext("2d")!,
       rgba = context.getImageData(0, 0, canvas.width, canvas.height);
-    const mask = processMask(rgba.data, canvas.width, canvas.height, {
+    const mask = buildRelief(rgba.data, canvas.width, canvas.height, {
       mode: "auto",
     });
-    const output = document.createElement("canvas");
-    output.width = canvas.width;
-    output.height = canvas.height;
-    output
-      .getContext("2d")!
-      .putImageData(
-        new ImageData(
-          new Uint8ClampedArray(mask.pixels),
-          canvas.width,
-          canvas.height
-        ),
-        0,
-        0
-      );
     this.logo = canvas.toDataURL();
-    this.surface.setImage(output);
+    this.surface.setImage(
+      new ImageData(
+        new Uint8ClampedArray(mask.pixels),
+        canvas.width,
+        canvas.height
+      )
+    );
     this.surface.set({ uImageSize: [canvas.width, canvas.height] });
   }
   async loadSVG(source: string) {
