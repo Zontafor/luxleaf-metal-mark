@@ -122,4 +122,12 @@ test("rounded relief retains holes and gives outward, approximately resolution-i
   const ring = buildRelief(disk(64, true), 64, 64);
   assert.equal(ring.pixels[(32 * 64 + 32) * 4 + 3], 0);
   assert.equal(ring.pixels[(32 * 64 + 47) * 4 + 3], 255);
+  const faint = disk(64);
+  for (let i = 3; i < faint.length; i += 4) if (faint[i]) faint[i] = 100;
+  const defaultThreshold = buildRelief(faint, 64, 64);
+  const lowThreshold = buildRelief(faint, 64, 64, {threshold: 0.2});
+  close(normal(defaultThreshold.pixels, 64, 47, 32)[0], 0, 0.01);
+  assert.ok(normal(lowThreshold.pixels, 64, 47, 32)[0] > 0.1);
+  assert.equal(lowThreshold.pixels[(32 * 64 + 47) * 4 + 3], 100);
+
 });

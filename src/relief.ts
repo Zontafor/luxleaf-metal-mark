@@ -1,15 +1,16 @@
 import { distanceField, processMask, type MaskSettings } from "./mask.js";
+export type ReliefSettings = Pick<MaskSettings, "mode" | "threshold" | "invert">;
 /** Rounded height field with resolution-scaled unit normals. Silhouette alpha and holes are retained. */
 export function buildRelief(
   rgba: Uint8ClampedArray,
   width: number,
   height: number,
-  settings: MaskSettings = {}
+  settings: ReliefSettings = {}
 ) {
   const source = processMask(rgba, width, height, settings);
   const mask = new Uint8Array(width * height);
   for (let i = 0; i < mask.length; i++)
-    mask[i] = source.pixels[i * 4 + 3] >= 128 ? 1 : 0;
+    mask[i] = source.pixels[i * 4 + 3] / 255 >= (settings.threshold ?? 0.5) ? 1 : 0;
   const distance = distanceField(mask, width, height);
   let radius = 1;
   for (const d of distance) radius = Math.max(radius, d);
