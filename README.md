@@ -1,77 +1,81 @@
-# LuxLeaf Metal Mark
+# LuxLeaf Metal Mark — independent liquid editor
 
-Original distance-field logo rendering with SVG intake, portable projects and video export.
+**A logo preview, six live effect controls, image intake, and export tools built in original LuxLeaf code.**
 
-The `behavior-parity` branch adds an independently implemented liquid-logo editor. The latest published stable package remains **0.2.0**; these changes have not yet been released. Original LuxLeaf additions are proprietary to **Michelle L. Wu**. The included licensed foundations retain their own licenses and attribution. Public source visibility does not grant a license to LuxLeaf's proprietary additions.
+[Run the editor](#run-the-editor) · [Renderer example](#renderer-example) · [Controls](#controls) · [Published-package guide](#published-package-guide)
 
-## Workbench
+![Independent liquid editor with an original star example](docs/images/liquid-editor.jpg)
+
+*Actual local editor. [View its source](demo/liquid.tsx). Exact pixel and original server-API equivalence are not established.*
+
+This guide covers the `behavior-parity` branch in [PR #1](https://github.com/Zontafor/luxleaf-metal-mark/pull/1). `LiquidMark` is available in this source branch; it is **not** in the published 0.2.0 registry package. The [main guide](https://github.com/Zontafor/luxleaf-metal-mark/blob/main/README.md) documents that package's `MetalCanvas` and `MetalMark` API.
+
+## Run the editor
+
+Use Node 24+ and a WebGL2-capable browser.
 
 ```sh
+git clone --branch behavior-parity https://github.com/Zontafor/luxleaf-metal-mark.git
+cd luxleaf-metal-mark
 npm ci --ignore-scripts
-npm run verify
-npm run verify:package
 npm run dev
 ```
 
-Use Node 24+. Open `/` for the six-control liquid editor, `/checks-liquid.html` for its browser checks, and `/advanced.html` for the previous studio. `/checks-expanded.html` continues to verify that studio. These pages run locally. Consumer applications must supply authentication, tenancy and deployment controls appropriate to their use.
+Open the Vite URL. Choose a geometric example or upload your own logo. Adjust the six effect controls and preview background. Expand **Export and share** to save PNG, record WebM, save a project or create a bounded share link.
 
-## Install
+## Renderer example
 
-The scoped package is `@zontafor/luxleaf-metal-mark`. GitHub Packages requires registry authentication even for public npm packages. Configure your own GitHub credential outside source control, then:
-
-```sh
-npm install @zontafor/luxleaf-metal-mark@0.2.0 --registry=https://npm.pkg.github.com
-```
-
-GitHub Release `.tgz` attachments provide a separate installable archive. A release attachment alone is not proof of registry publication. See [release procedure](docs/RELEASING.md) for verification commands and the distinction between repository and package visibility.
-
-## Package entry points
-
-| Import suffix | Distributed implementation |
-|---|---|
-| `.` | `./dist/index.js` |
-| `./server` | `./dist/server.js` |
-
-## Implemented scope
-
-### Original implementation
-
-No Paper Design source, shader or assets are included. This package is independently implemented; it is not an exact recreation or API-compatible fork of that restricted product.
-
-### Image pipeline
-
-Linear-time distance transform, alpha/luminance masks, bevel normals, bounded local PNG/WebP decoding, and a geometry-only SVG sanitizer/rasterizer.
-
-### Studio and persistence
-
-Directional metal reflections, edge/chromatic controls, PNG and WebM exports, portable embedded-logo projects, undo/redo, bounded fragment sharing, authenticated SQLite project CRUD with expiry and opt-in public reads.
-
-### Remaining host verification
-
-The server is a single-process reference adapter, not an enterprise tenant/auth system. Distributed storage, quotas, host rate limits, HTTPS deployment, independent security assessment and broad device/codec certification remain outside this release.
-
-## Verification
-
-The current suite includes **20 unit/integration tests**. The liquid browser page checks each spatial effect separately, all six example shapes, SVG/PNG intake, export, sharing and disposal. The previous expanded browser page contains **10 assertions**, run separately from headless CI. These counts describe specific checks, not proof of exact feature, pixel or performance parity with another product. See [validation](docs/VALIDATION.md) for evidence and known limits.
-
-The repository includes source, tests, runnable examples, build configuration, architecture notes, dependency notices and release workflows. The npm archive includes source and examples alongside JavaScript and declarations. It intentionally excludes installed dependencies, credentials and local user media.
-
-- [Capability matrix](docs/CAPABILITIES.md)
-- [Architecture and lifecycle](docs/ARCHITECTURE.md)
-- [Provenance](docs/PROVENANCE.md)
-- [Third-party notices](THIRD_PARTY_NOTICES.md)
-- [Security and supported deployment](SECURITY.md)
-
-## Liquid editor API (unreleased)
+This browser example uses source imports. Place it in `demo/usage.ts`, load it as a module from a demo HTML page, and supply a mounted `<canvas id="logo" style="width:400px;height:400px"></canvas>`.
 
 ```ts
-import { LiquidMark, liquidDefaults } from '@zontafor/luxleaf-metal-mark';
+import { LiquidMark, liquidDefaults } from '../src/liquid';
+
+const canvas = document.querySelector<HTMLCanvasElement>('#logo');
+if (!canvas) throw new Error('A logo canvas is required');
 const renderer = new LiquidMark(canvas, liquidDefaults);
-await renderer.load(imageFile); // SVG, PNG, WebP, JPEG; bounded local decoding
-renderer.update({ refraction: 0.015, edge: 0.4, patternBlur: 0.005,
-  liquify: 0.07, speed: 0.3, patternScale: 2 });
-const png = await renderer.exportPNG(); // transparent image; preview backdrop is CSS
-renderer.destroy();
+await renderer.example('star');
+renderer.update({ refraction: 0.02, liquify: 0.1, speed: 0.2 });
+
+// In your export action: const png = await renderer.exportPNG();
+// In your view's teardown: renderer.destroy();
 ```
 
-`liquidShare` and `liquidFromShare` round-trip a validated `LiquidProject` in a URL fragment. Large images use a project file. This schema is separate from the older SQLite `MetalProject` adapter; it is not accepted by that API. Original geometric examples replace third-party brand artwork. See [observed behavior and remaining differences](docs/REFERENCE_BEHAVIOR.md).
+For a file selected by the user, use `await renderer.load(file)`. It accepts SVG, PNG, WebP and JPEG within the implementation's size limits. `loadSVG(text)` runs the independent geometry-only decoder. `destroy()` releases the renderer; call it when removing the view.
+
+## Controls
+
+| Control | Observed default | LuxLeaf accepted range |
+|---|---|---|
+| Refraction | 0.015 | 0–0.06 |
+| Edge | 0.400 | 0–1 |
+| Pattern Blur | 0.005 | 0–0.05 |
+| Liquify | 0.070 | 0–0.4 |
+| Speed | 0.300 | 0–1; zero pauses |
+| Pattern Scale | 2.0 | 0.1–10 |
+
+The defaults were visible in the reference screenshot. Range limits are LuxLeaf choices. See [the observation record](docs/REFERENCE_BEHAVIOR.md) for what was and was not established.
+
+## Projects and export
+
+`liquidShare()` and `liquidFromShare()` round-trip a validated `LiquidProject` in a URL fragment. Use a project file when the embedded image exceeds the link size limit. The `LiquidProject` schema is distinct from the older SQLite `MetalProject` adapter. Preview backgrounds are CSS; PNG output retains transparency.
+
+| Local route | Purpose | Source |
+|---|---|---|
+| `/` | Six-control liquid editor | [Editor](demo/liquid.tsx) |
+| `/checks-liquid.html` | 18 liquid behavior checks | [Checks](demo/checks-liquid.ts) |
+| `/advanced.html` | Previous studio and project workflow | [Studio](demo/advanced.tsx) |
+
+## Verification and license
+
+```sh
+npm run verify
+npm run verify:package
+```
+
+TypeScript, production build and 20 automated tests passed; 18 separate browser checks cover rendering, control effects, image input, export, sharing, GPU errors and disposal. [Validation notes](docs/VALIDATION.md) explain remaining gaps.
+
+Original LuxLeaf code remains under the [Michelle L. Wu proprietary license](LICENSE). No Paper implementation source, shader, parser or brand artwork was copied. Dependencies retain their own [licenses](THIRD_PARTY_NOTICES.md).
+
+## Published-package guide
+
+For installation and working examples of the released `MetalCanvas` and `MetalMark` API, see the [organized main-branch README](https://github.com/Zontafor/luxleaf-metal-mark/blob/main/README.md). The earlier implementation remains in this branch alongside the new editor.
