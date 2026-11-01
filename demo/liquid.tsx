@@ -50,7 +50,13 @@ function App() {
     bg(x.background);
   }
   useEffect(() => {
-    const r = new LiquidMark(canvas.current!);
+    let r: LiquidMark;
+    try {
+      r = new LiquidMark(canvas.current!);
+    } catch (error) {
+      status(String(error));
+      return;
+    }
     renderer.current = r;
     void (async () => {
       try {

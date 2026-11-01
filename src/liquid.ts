@@ -97,6 +97,12 @@ export class LiquidMark {
   ) {
     this.settings = validateLiquid(settings);
     this.surface = new Surface(canvas, fragment);
+    if (this.surface.status !== "ready") {
+      this.surface.destroy();
+      throw Error(
+        "WebGL2 is unavailable; this browser cannot render the liquid effect"
+      );
+    }
     this.update(settings);
   }
   update(settings: Partial<LiquidSettings>) {

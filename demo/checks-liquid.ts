@@ -19,6 +19,15 @@ document.querySelector("#run")!.addEventListener("click", async () => {
   const r = new LiquidMark(canvas, { speed: 0 });
   try {
     check("independent shader compiles", r.surface.status === "ready");
+    const unsupported = document.createElement("canvas");
+    Object.defineProperty(unsupported, "getContext", { value: () => null });
+    let unsupportedRejected = false;
+    try {
+      new LiquidMark(unsupported);
+    } catch (error) {
+      unsupportedRejected = String(error).includes("WebGL2");
+    }
+    check("unsupported GPU reports an explicit error", unsupportedRejected);
     for (const shape of liquidExamples) {
       await r.example(shape);
       const gl = canvas.getContext("webgl2")!,

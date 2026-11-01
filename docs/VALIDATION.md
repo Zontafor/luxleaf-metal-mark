@@ -27,7 +27,7 @@ On 2026-11-01 the expanded browser suite completed **10/10 passing assertions** 
 ## Independent liquid editor branch — 2026-11-01
 
 - TypeScript check, 20 unit/integration tests and production build pass.
-- Browser `/checks-liquid.html`: 17 checks pass in the local in-app browser. Checks cover shader compilation; all six original shapes; separate refraction, edge, blur, liquify and scale effects; SVG intake; PNG re-intake; PNG output; compact project-link round-trip; resource disposal.
+- Browser `/checks-liquid.html`: 18 checks pass in the local in-app browser. Checks cover shader compilation; explicit error for unavailable WebGL2; all six original shapes; separate refraction, edge, blur, liquify and scale effects; SVG intake; PNG re-intake; PNG output; compact project-link round-trip; resource disposal.
 - Manual UI: shape selection, speed set to zero, background controls and Create share link were exercised. Original observed control names/defaults are documented in `REFERENCE_BEHAVIOR.md`.
 - Package archive imports both exported entry points outside the source tree. The new API is not yet in the published 0.2.0 package.
 - Pixel matching, animation timing comparison, original upload/share API compatibility and original brand assets are not established. A share fragment rejects images above the documented size limit; save a project file for larger images. Preview backgrounds are CSS and are not flattened into PNG exports.
