@@ -154,8 +154,8 @@ Metal Mark is independently implemented; exact Paper pixel or API equivalence is
 | [Validation](VALIDATION.md) | Checks and their scope |
 | [Releases](RELEASING.md) | Registry authentication, archives and release verification |
 | [Provenance](PROVENANCE.md) | Foundation boundaries and original additions |
-| [Security](SECURITY.md) | Supported deployment assumptions |
-| [Changelog](CHANGELOG.md) | Release history |
+| [Security](../SECURITY.md) | Supported deployment assumptions |
+| [Changelog](../CHANGELOG.md) | Release history |
 
 ## License and attribution
 
