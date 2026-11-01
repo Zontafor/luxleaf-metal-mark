@@ -4,6 +4,8 @@ import {
   liquidExamples,
   liquidShare,
   liquidFromShare,
+  serializeLiquidProject,
+  parseLiquidProject,
 } from "../src/liquid";
 import { drawPreview, exportPreviewPNG } from "../src/preview-export";
 import { Surface } from "../src/surface";
@@ -321,6 +323,15 @@ document.querySelector("#run")!.addEventListener("click", async () => {
       r.artworkTreatment === "cutout" &&
         read().some((v, i) => i % 4 === 3 && v > 0 && v < 245),
     );
+    const savedAulin = serializeLiquidProject({
+      version: 1, kind: "liquid-logo", settings: { ...liquidDefaults },
+      background: "gradient", inputMode: "cutout", logo: r.exportLogo(),
+    });
+    const restoredAulin = parseLiquidProject(savedAulin);
+    const restoredBytes = Uint8Array.from(atob(restoredAulin.logo.split(",")[1]), c => c.charCodeAt(0));
+    await r.load(new File([restoredBytes], "restored.png", { type: "image/png" }));
+    check("AULIN's large saved project imports and renders again",
+      savedAulin.length > 1500000 && r.artworkTreatment === "cutout" && read().some((v, i) => i % 4 === 3 && v > 0));
     r.destroy();
     check("renderer releases resources", r.surface.status === "disposed");
     out.textContent = lines.join("\n") + "\nALL PASSED: " + lines.length;

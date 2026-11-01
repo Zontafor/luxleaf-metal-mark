@@ -1,0 +1,36 @@
+{
+  "recorded": "2026-11-01",
+  "capture": "Actual AULIN live editor, user-selected look captured before engineering changes",
+  "artwork": "../../demo/public/aulin_leather.png",
+  "settings": {
+    "refraction": 0.015,
+    "edge": 0.661,
+    "patternBlur": 0.05,
+    "liquify": 0.4,
+    "speed": 1,
+    "patternScale": 10
+  },
+  "background": "gradient",
+  "inputMode": "cutout",
+  "video": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "width": 886,
+        "height": 886,
+        "avg_frame_rate": "30/1",
+        "nb_read_frames": "296"
+      }
+    ],
+    "format": {
+      "duration": "9.866667",
+      "size": "2987115"
+    }
+  },
+  "meanFrameChangeSeconds1To8": 4.881,
+  "sha256": "52d8ec44bfa4b8fc45ed09f06d821a48e7edc5dfd3be99e3f4a21c99f43e9093",
+  "audio": false,
+  "reproduce": "Select AULIN demo in the local editor; animation start phase varies."
+}

@@ -11,8 +11,12 @@ import {
   liquidShare,
   liquidFromShare,
   validateLiquidProject,
+  parseLiquidProject,
+  serializeLiquidProject,
+  liquidProjectMaxBytes,
 } from "../src/liquid";
 import { exportPreviewPNG, recordPreview } from "../src/preview-export";
+import { aulinDemo } from "./aulin-preset";
 import "./liquid.css";
 const labels: Record<keyof LiquidSettings, string> = {
   refraction: "Refraction",
@@ -33,7 +37,8 @@ function download(blob: Blob, name: string) {
 function App() {
   const canvas = useRef<HTMLCanvasElement>(null),
     renderer = useRef<LiquidMark | null>(null),
-    input = useRef<HTMLInputElement>(null);
+    input = useRef<HTMLInputElement>(null),
+    recording = useRef<AbortController | null>(null);
   const [settings, set] = useState<LiquidSettings>({ ...liquidDefaults }),
     [background, bg] = useState("gradient"),
     [inputMode, mode] = useState<ArtworkMode>("auto"),
@@ -81,6 +86,7 @@ function App() {
       }
     })();
     return () => {
+      recording.current?.abort();
       r.destroy();
       renderer.current = null;
     };
@@ -89,11 +95,12 @@ function App() {
     renderer.current?.update(settings);
   }, [settings]);
   async function load(file: File) {
+    if (recording.current) return;
     working(true);
     try {
       if (file.name.endsWith(".json")) {
-        if (file.size > 1520000) throw Error("Project too large");
-        await restore(JSON.parse(await file.text()));
+        if (file.size > liquidProjectMaxBytes) throw Error("Project exceeds 12 MiB");
+        await restore(parseLiquidProject(await file.text()));
       } else await renderer.current!.load(file);
       status(
         renderer.current!.artworkTreatment === "relief"
@@ -139,7 +146,7 @@ function App() {
             onDrop={(e) => {
               e.preventDefault();
               const file = e.dataTransfer.files[0];
-              if (file) void load(file);
+              if (file && !busy) void load(file);
             }}
           >
             <canvas ref={canvas} aria-label="Liquid metal logo" />
@@ -177,6 +184,7 @@ function App() {
                 {["gradient", "#ffffff", "#000000"].map((color) => (
                   <button
                     key={color}
+                    disabled={!ready || busy}
                     aria-label={
                       color === "gradient"
                         ? "Gradient background"
@@ -195,6 +203,7 @@ function App() {
                 ))}
                 <input
                   type="color"
+                  disabled={!ready || busy}
                   aria-label="Custom background"
                   value={background === "gradient" ? "#c8c8c8" : background}
                   onChange={(e) => bg(e.target.value)}
@@ -207,6 +216,7 @@ function App() {
                 <input
                   id={key}
                   type="range"
+                  disabled={!ready || busy}
                   min={liquidRanges[key][0]}
                   max={liquidRanges[key][1]}
                   step={liquidRanges[key][2]}
@@ -217,6 +227,7 @@ function App() {
                 />
                 <input
                   type="number"
+                  disabled={!ready || busy}
                   aria-label={labels[key] + " value"}
                   min={liquidRanges[key][0]}
                   max={liquidRanges[key][1]}
@@ -287,6 +298,27 @@ function App() {
           }}
         >
           SentiLeaf demo
+        </button>
+        <button
+          disabled={!ready || busy}
+          onClick={async () => {
+            working(true);
+            try {
+              const response = await fetch("/aulin_leather.png");
+              if (!response.ok) throw Error("AULIN image unavailable");
+              renderer.current!.setInputMode(aulinDemo.inputMode);
+              mode(aulinDemo.inputMode);
+              await load(new File([await response.blob()], "aulin_leather.png", { type: "image/png" }));
+              set({ ...aulinDemo.settings });
+              bg(aulinDemo.background);
+            } catch (e) {
+              status(String(e));
+            } finally {
+              working(false);
+            }
+          }}
+        >
+          AULIN demo
         </button>
         <button
           disabled={!ready || busy}
@@ -378,7 +410,7 @@ function App() {
                 try {
                   download(
                     await renderer.current!.exportPNG(),
-                    "sentileaf-transparent.png",
+                    "luxleaf-liquid-transparent.png",
                   );
                 } catch (e) {
                   status(String(e));
@@ -409,29 +441,37 @@ function App() {
                   status("Motion is paused. Increase Speed before recording.");
                   return;
                 }
+                const controller = new AbortController();
+                recording.current = controller;
                 working(true);
-                status("Recording 10 seconds with the selected background…");
+                status("Recording 10 seconds — settings locked until complete. Keep this tab visible.");
                 try {
                   download(
-                    await recordPreview(canvas.current!, background),
+                    await recordPreview(canvas.current!, background, 10, recording.current!.signal),
                     "luxleaf-liquid.webm",
                   );
                   status("Video saved with the selected background");
                 } catch (e) {
-                  status(String(e));
+                  status(e instanceof DOMException && e.name === "AbortError"
+                    ? "Recording cancelled. No partial video was saved."
+                    : String(e));
                 } finally {
+                  recording.current = null;
                   working(false);
                 }
               }}
             >
               Export video
             </button>
+            {busy && recording.current && (
+              <button onClick={() => recording.current?.abort()}>Cancel recording</button>
+            )}
             <button
               disabled={!ready || busy}
               onClick={() => {
                 try {
                   download(
-                    new Blob([JSON.stringify(project())], {
+                    new Blob([serializeLiquidProject(project())], {
                       type: "application/json",
                     }),
                     "luxleaf-liquid.json",
@@ -460,7 +500,7 @@ function App() {
             >
               Create share link
             </button>
-            <button onClick={() => set({ ...liquidDefaults })}>
+            <button disabled={!ready || busy} onClick={() => set({ ...liquidDefaults })}>
               Reset settings
             </button>
           </div>

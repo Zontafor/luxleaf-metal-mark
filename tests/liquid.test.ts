@@ -9,6 +9,9 @@ import {
   validateLiquidProject,
   liquidShare,
   liquidFromShare,
+  parseLiquidProject,
+  serializeLiquidProject,
+  liquidProjectMaxBytes,
 } from "../src/liquid.js";
 test("reference control names and observed defaults are preserved", () => {
   assert.deepEqual(validateLiquid({}), {
@@ -53,4 +56,21 @@ test("liquid projects and links restore the logo and all controls", () => {
   assert.throws(() =>
     validateLiquidProject({ ...p, background: "url(https://example.com)" })
   );
+});
+
+test("large artwork projects round-trip while share links remain bounded", () => {
+  const p = {
+    version: 1 as const, kind: "liquid-logo" as const,
+    settings: { ...liquidDefaults }, background: "gradient",
+    inputMode: "cutout" as const,
+    logo: "data:image/png;base64," + Buffer.alloc(4 * 1024 * 1024).toString("base64"),
+  };
+  assert.deepEqual(parseLiquidProject(serializeLiquidProject(p)), p);
+  assert.throws(() => liquidShare(p, "https://example.test"), /project file/);
+  assert.throws(() => serializeLiquidProject({ ...p,
+    logo: "data:image/png;base64," + Buffer.alloc(8 * 1024 * 1024 + 1).toString("base64"),
+  }), /embedded logo/);
+  assert.throws(() => parseLiquidProject(" ".repeat(liquidProjectMaxBytes + 1)), /12 MiB/);
+  for (const data of ["AAA", "A===", "AA=A"])
+    assert.throws(() => validateLiquidProject({ ...p, logo: "data:image/png;base64," + data }));
 });

@@ -2,6 +2,10 @@
 
 ## 0.3.0-dev.0 — unpublished development
 
+- Preserve the user-selected AULIN appearance as the lead video and a reproducible editor preset.
+- Support bounded large artwork project round-trips, including the AULIN photograph.
+- Lock editing during recording; add cancellation and cleanup for compositor failure, tab hiding and canvas resize.
+
 - Replace UV color bands with rounded relief and GGX conductor reflections, with numerical and GPU validation.
 - Honor custom relief thresholds while retaining silhouette alpha.
 - Add an independent liquid renderer and editor with the six observed controls and defaults.

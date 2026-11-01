@@ -11,7 +11,7 @@ npm run verify:package
 npm run dev
 ```
 
-`verify` checks preserved foundation hashes where applicable, type checks the LuxLeaf code, runs 33 unit/integration tests and builds the library and workbenches. `verify:package` checks export paths and source/notices in the actual tarball, extracts it outside the source tree and imports supported JavaScript entries using the installed dependency tree. The publication workflow additionally installs the package from GitHub's registry into a fresh consumer directory.
+`verify` checks preserved foundation hashes where applicable, type checks the LuxLeaf code, runs 40 unit/integration tests and builds the library and workbenches. `verify:package` checks export paths and source/notices in the actual tarball, extracts it outside the source tree and imports supported JavaScript entries using the installed dependency tree. The publication workflow additionally installs the package from GitHub's registry into a fresh consumer directory.
 
 Open `/checks-expanded.html` and press **Run expanded checks**. The 10 assertions exercise actual browser functionality. Browser checks are manually invoked, not silently counted as GitHub Actions coverage. The older `/checks.html` remains for regression coverage.
 
@@ -50,3 +50,11 @@ Five additional numerical tests cover reflection, complex Fresnel, BRDF reciproc
 ## AULIN full-image coverage — 2026-11-01
 
 33 automated tests and 28 browser checks pass. The existing shader remains unchanged. The new image-relief path retains source alpha while preserving the prior luminance-derived height and normal channels. Tests cover old project compatibility, artwork-mode validation, opaque interior coverage, effects across four image quadrants and access to the previous cutout appearance. A 9.83-second canvas video records the AULIN full-surface preset with its selected background.
+
+## Selected AULIN demo and export reliability — 2026-11-01
+
+- TypeScript, production build and **40 automated tests** pass. Added regressions cover large project round-trips, bounded sharing, oversized/invalid base64 rejection, compositor failures, resize cancellation, user cancellation and hidden-tab cleanup.
+- **29/29 liquid browser checks** pass, including reloading an actual AULIN project larger than the previous 1.5 MB cap.
+- Manual UI verification restored the user's 5.36 MB saved project with all six chosen controls, cutout mode and gradient background. Recording disabled settings/background/uploads/presets/reset; Cancel recording restored editing without a partial download. A subsequent full recording completed.
+- The lead AULIN video was captured directly from the user's selected live appearance before these changes. Its exact settings, dimensions, duration and SHA-256 are in `media/aulin-demo.json`. The shader is unchanged.
+- Saved project bounds are 8 MiB of embedded PNG and 12 MiB of JSON. An oversized export reports an error instead of saving a file that cannot be imported. Existing 64,000-character share serialization bounds remain unchanged.

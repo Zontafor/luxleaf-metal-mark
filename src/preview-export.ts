@@ -36,29 +36,45 @@ export async function recordPreview(
   source: HTMLCanvasElement,
   background: string,
   seconds = 10,
+  signal?: AbortSignal,
 ): Promise<Blob> {
   if (document.hidden || matchMedia("(prefers-reduced-motion: reduce)").matches)
     throw Error("Keep the preview visible and enable motion to record");
+  if (signal?.aborted) throw new DOMException("Recording cancelled", "AbortError");
   const output = document.createElement("canvas");
+  const width = source.width, height = source.height;
   let frame = 0;
+  let renderError: unknown;
   const abort = new AbortController();
+  const cancel = () => abort.abort();
   const visibility = () => {
-    if (document.hidden) abort.abort();
+    if (document.hidden) cancel();
+  };
+  const draw = () => {
+    try {
+      if (source.width !== width || source.height !== height)
+        throw Error("Preview resized during recording. Record again at the new size.");
+      drawPreview(source, output, background);
+      frame = requestAnimationFrame(draw);
+    } catch (error) {
+      renderError = error;
+      cancel();
+    }
   };
   document.addEventListener("visibilitychange", visibility);
-  const draw = () => {
-    drawPreview(source, output, background);
-    frame = requestAnimationFrame(draw);
-  };
-  draw();
+  signal?.addEventListener("abort", cancel, { once: true });
   try {
+    draw();
     return await recordCanvas(output, {
       seconds,
       fps: 30,
       signal: abort.signal,
     });
+  } catch (error) {
+    throw renderError ?? error;
   } finally {
     cancelAnimationFrame(frame);
     document.removeEventListener("visibilitychange", visibility);
+    signal?.removeEventListener("abort", cancel);
   }
 }

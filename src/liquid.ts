@@ -206,6 +206,17 @@ export interface LiquidProject {
   logo: string;
   inputMode?: ArtworkMode;
 }
+/** Matches the image loader's 8 MiB input bound; JSON includes base64 overhead. */
+export const liquidProjectMaxBytes = 12 * 1024 * 1024;
+const logoMaxBytes = 8 * 1024 * 1024;
+export function parseLiquidProject(text: string): LiquidProject {
+  if (new TextEncoder().encode(text).byteLength > liquidProjectMaxBytes)
+    throw Error("Project exceeds 12 MiB");
+  return validateLiquidProject(JSON.parse(text));
+}
+export function serializeLiquidProject(project: LiquidProject): string {
+  return JSON.stringify(validateLiquidProject(project));
+}
 export function validateLiquidProject(value: unknown): LiquidProject {
   if (!value || typeof value !== "object" || Array.isArray(value))
     throw Error("Project required");
@@ -233,10 +244,14 @@ export function validateLiquidProject(value: unknown): LiquidProject {
     throw Error("Invalid background");
   if (
     typeof x.logo !== "string" ||
-    x.logo.length > 1500000 ||
-    !/^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(x.logo)
+    x.logo.length > 22 + Math.ceil(logoMaxBytes / 3) * 4 ||
+    !/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/.test(x.logo)
   )
-    throw Error("Invalid embedded logo");
+    throw Error("Invalid embedded logo (maximum 8 MiB PNG)");
+  const encoded = x.logo.slice(22);
+  const padding = encoded.endsWith("==") ? 2 : encoded.endsWith("=") ? 1 : 0;
+  if (encoded.length % 4 || encoded.length / 4 * 3 - padding > logoMaxBytes)
+    throw Error("Invalid embedded logo (maximum 8 MiB PNG)");
   if (
     x.inputMode !== undefined &&
     !["auto", "cutout", "relief"].includes(x.inputMode as string)

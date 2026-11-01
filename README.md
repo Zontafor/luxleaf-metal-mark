@@ -4,13 +4,13 @@
 
 [Run the editor](#run-the-editor) · [Renderer example](#renderer-example) · [Controls](#controls) · [Published-package guide](#published-package-guide)
 
-## AULIN full-surface demo
+## AULIN selected demo
 
-[![AULIN full-surface chrome motion](docs/media/aulin-full-surface.gif)](docs/media/aulin-full-surface.mp4)
+[![AULIN selected chrome motion](docs/media/aulin-demo.gif)](docs/media/aulin-demo.mp4)
 
-[Watch AULIN MP4](docs/media/aulin-full-surface.mp4) · [Original WebM](docs/media/aulin-full-surface.webm) · [Artwork modes and reproduction](docs/AULIN.md)
+[Watch AULIN MP4](docs/media/aulin-demo.mp4) · [Original WebM](docs/media/aulin-demo.webm) · [Artwork modes and reproduction](docs/AULIN.md)
 
-The original chrome shader and motion are retained. **AULIN full surface** keeps the whole photograph metallic; **AULIN previous look** restores its earlier cutout treatment.
+This is the user-selected look recorded from the live editor. Choose **AULIN demo** to restore the exact six controls, gradient background and cutout mode. The original chrome shader is unchanged. [Full-surface comparison](docs/media/aulin-full-surface.mp4) remains available.
 
 ## SentiLeaf demo
 
@@ -75,12 +75,12 @@ The current renderer solves a smooth rounded surface inside the logo mask, prese
 
 ## Projects and export
 
-`liquidShare()` and `liquidFromShare()` round-trip a validated `LiquidProject` in a URL fragment. Use a project file when the embedded image exceeds the link size limit. The `LiquidProject` schema is distinct from the older SQLite `MetalProject` adapter. Editor PNG and video exports composite the selected preview background. **Transparent PNG** and the renderer’s `exportPNG()` API retain alpha. Flat-color raster backdrops are removed before rendering, and excess margins are fitted automatically.
+`liquidShare()` and `liquidFromShare()` round-trip a validated `LiquidProject` in a URL fragment. Use a project file when the embedded image exceeds the link size limit. File projects support embedded PNGs up to 8 MiB within a 12 MiB JSON limit; serialization validates the same bounds before download. Recording locks material/background/artwork changes, supports cancellation and aborts if the tab is hidden or the canvas changes size. The `LiquidProject` schema is distinct from the older SQLite `MetalProject` adapter. Editor PNG and video exports composite the selected preview background. **Transparent PNG** and the renderer’s `exportPNG()` API retain alpha. Flat-color raster backdrops are removed before rendering, and excess margins are fitted automatically.
 
 | Local route | Purpose | Source |
 |---|---|---|
 | `/` | Six-control liquid editor | [Editor](demo/liquid.tsx) |
-| `/checks-liquid.html` | 28 liquid behavior checks | [Checks](demo/checks-liquid.ts) |
+| `/checks-liquid.html` | 29 liquid behavior checks | [Checks](demo/checks-liquid.ts) |
 | `/advanced.html` | Previous studio and project workflow | [Studio](demo/advanced.tsx) |
 
 ## Verification and license
@@ -90,7 +90,7 @@ npm run verify
 npm run verify:package
 ```
 
-TypeScript, production build and 33 automated tests passed; 28 separate browser checks cover rendering, control effects, image input, export, sharing, GPU errors and disposal. [Validation notes](docs/VALIDATION.md) explain remaining gaps.
+TypeScript, production build and 40 automated tests passed; 29 separate browser checks cover rendering, control effects, image input, export, sharing, GPU errors and disposal. [Validation notes](docs/VALIDATION.md) explain remaining gaps.
 
 Original LuxLeaf code remains under the [Michelle L. Wu proprietary license](LICENSE). No Paper implementation source, shader, parser or brand artwork was copied. Dependencies retain their own [licenses](THIRD_PARTY_NOTICES.md).
 
