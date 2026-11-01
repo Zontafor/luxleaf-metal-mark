@@ -2,7 +2,7 @@
 
 Original distance-field logo rendering with SVG intake, portable projects and video export.
 
-Version **0.2.0** expands the initial workbench into a broader package. Original LuxLeaf additions are proprietary to **Michelle L. Wu**. The included licensed foundations retain their own licenses and attribution. Public source visibility does not grant a license to LuxLeaf's proprietary additions.
+The `behavior-parity` branch adds an independently implemented liquid-logo editor. The latest published stable package remains **0.2.0**; these changes have not yet been released. Original LuxLeaf additions are proprietary to **Michelle L. Wu**. The included licensed foundations retain their own licenses and attribution. Public source visibility does not grant a license to LuxLeaf's proprietary additions.
 
 ## Workbench
 
@@ -13,7 +13,7 @@ npm run verify:package
 npm run dev
 ```
 
-Use Node 24+. Open `/advanced.html` for the expanded studio, `/` for the compact demonstration, and `/checks-expanded.html` for real browser acceptance checks. These pages run locally. Consumer applications must supply authentication, tenancy and deployment controls appropriate to their use.
+Use Node 24+. Open `/` for the six-control liquid editor, `/checks-liquid.html` for its browser checks, and `/advanced.html` for the previous studio. `/checks-expanded.html` continues to verify that studio. These pages run locally. Consumer applications must supply authentication, tenancy and deployment controls appropriate to their use.
 
 ## Install
 
@@ -52,7 +52,7 @@ The server is a single-process reference adapter, not an enterprise tenant/auth 
 
 ## Verification
 
-The current suite includes **16 unit/integration tests**. The expanded browser page contains **10 assertions**, run separately from headless CI. These counts describe specific checks, not proof of exact feature, pixel or performance parity with another product. See [validation](docs/VALIDATION.md) for evidence and known limits.
+The current suite includes **20 unit/integration tests**. The liquid browser page checks each spatial effect separately, all six example shapes, SVG/PNG intake, export, sharing and disposal. The previous expanded browser page contains **10 assertions**, run separately from headless CI. These counts describe specific checks, not proof of exact feature, pixel or performance parity with another product. See [validation](docs/VALIDATION.md) for evidence and known limits.
 
 The repository includes source, tests, runnable examples, build configuration, architecture notes, dependency notices and release workflows. The npm archive includes source and examples alongside JavaScript and declarations. It intentionally excludes installed dependencies, credentials and local user media.
 
@@ -61,3 +61,17 @@ The repository includes source, tests, runnable examples, build configuration, a
 - [Provenance](docs/PROVENANCE.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
 - [Security and supported deployment](SECURITY.md)
+
+## Liquid editor API (unreleased)
+
+```ts
+import { LiquidMark, liquidDefaults } from '@zontafor/luxleaf-metal-mark';
+const renderer = new LiquidMark(canvas, liquidDefaults);
+await renderer.load(imageFile); // SVG, PNG, WebP, JPEG; bounded local decoding
+renderer.update({ refraction: 0.015, edge: 0.4, patternBlur: 0.005,
+  liquify: 0.07, speed: 0.3, patternScale: 2 });
+const png = await renderer.exportPNG(); // transparent image; preview backdrop is CSS
+renderer.destroy();
+```
+
+`liquidShare` and `liquidFromShare` round-trip a validated `LiquidProject` in a URL fragment. Large images use a project file. This schema is separate from the older SQLite `MetalProject` adapter; it is not accepted by that API. Original geometric examples replace third-party brand artwork. See [observed behavior and remaining differences](docs/REFERENCE_BEHAVIOR.md).

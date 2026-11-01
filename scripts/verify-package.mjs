@@ -39,7 +39,11 @@ try {
     if (key === "./native" || key.endsWith(".css")) continue;
     const file = typeof entry === "string" ? entry : entry.import;
     if (!file || !file.endsWith(".js")) continue;
-    await import("file://" + join(dir, "package", file));
+    const api = await import("file://" + join(dir, "package", file));
+    if (key === ".") {
+      for (const name of ["LiquidMark", "validateLiquid", "liquidShare", "liquidFromShare"])
+        if (typeof api[name] !== "function") throw Error("Missing liquid export " + name);
+    }
     imported.push(key);
   }
   console.log(
