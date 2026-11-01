@@ -1,63 +1,160 @@
 # LuxLeaf Metal Mark
 
-Original distance-field logo rendering with SVG intake, portable projects and video export.
+**Turn a logo into animated metal with local image processing, adjustable reflections and export tools.**
 
-Version **0.2.0** expands the initial workbench into a broader package. Original LuxLeaf additions are proprietary to **Michelle L. Wu**. The included licensed foundations retain their own licenses and attribution. Public source visibility does not grant a license to LuxLeaf's proprietary additions.
+[Quick start](#quick-start) · [Examples](#examples) · [API guide](#api-guide) · [Run the demos](#run-the-demos) · [Documentation](#documentation)
 
-## Workbench
+![LuxLeaf Metal Mark running in the local advanced workbench](docs/images/workbench.jpg)
+
+*Actual package workbench. [View its source](demo/advanced.tsx); run `/advanced.html` using the instructions below. This is a screenshot, not a hosted live demo.*
+
+## At a glance
+
+- Independent distance-field logo renderer with directional reflections and chromatic edges.
+- Bounded PNG/WebP input plus a geometry-only SVG decoding path.
+- React component and imperative renderer with explicit cleanup.
+- PNG/WebM export, portable projects, undo/redo and a reference persistence adapter.
+
+**Release covered:** `@zontafor/luxleaf-metal-mark@0.2.0` on `main`. [PR #1](https://github.com/Zontafor/luxleaf-metal-mark/pull/1) contains newer work; its [source-branch guide](https://github.com/Zontafor/luxleaf-metal-mark/blob/behavior-parity/README.md) uses the APIs available on that branch. The examples below use the published package, unless explicitly labeled otherwise.
+
+## Quick start
+
+Node 24+ for this repository; React 19 for the component example; WebGL2 for the animated effect. Use a transparent or white-background logo and give the canvas a visible size.
+
+### Install in an application
+
+Configure GitHub Packages authentication as described in the [release and registry guide](docs/RELEASING.md). Scope the registry to LuxLeaf so other dependencies continue to resolve from their normal registry:
 
 ```sh
+npm config set @zontafor:registry https://npm.pkg.github.com --location=project
+npm install @zontafor/luxleaf-metal-mark@0.2.0
+```
+
+Keep credentials outside committed source. [GitHub Releases](https://github.com/Zontafor/luxleaf-metal-mark/releases) also provide package archives; downloading an archive is separate from installing through the registry.
+
+### Try the repository locally
+
+```sh
+git clone https://github.com/Zontafor/luxleaf-metal-mark.git
+cd luxleaf-metal-mark
 npm ci --ignore-scripts
-npm run verify
-npm run verify:package
+npm run build
 npm run dev
 ```
 
-Use Node 24+. Open `/advanced.html` for the expanded studio, `/` for the compact demonstration, and `/checks-expanded.html` for real browser acceptance checks. These pages run locally. Consumer applications must supply authentication, tenancy and deployment controls appropriate to their use.
+Open the local address printed by Vite. React examples below belong in a React/TypeScript application; plain TypeScript examples run in a browser with a bundler.
 
-## Install
+## Examples
 
-The scoped package is `@zontafor/luxleaf-metal-mark`. GitHub Packages requires registry authentication even for public npm packages. Configure your own GitHub credential outside source control, then:
+### React logo preview
 
-```sh
-npm install @zontafor/luxleaf-metal-mark@0.2.0 --registry=https://npm.pkg.github.com
+```tsx
+import { MetalCanvas } from '@zontafor/luxleaf-metal-mark';
+
+export function BrandPreview() {
+  return (
+    <MetalCanvas
+      options={{ color: '#c6d9cb', speed: 0.3, angle: 25, edge: 1, chromatic: 0.15 }}
+      style={{ display: 'block', width: '100%', height: 360 }}
+    />
+  );
+}
 ```
 
-GitHub Release `.tgz` attachments provide a separate installable archive. A release attachment alone is not proof of registry publication. See [release procedure](docs/RELEASING.md) for verification commands and the distinction between repository and package visibility.
+This starts with the original LuxLeaf leaf shape. Use the workbench to upload a logo and adjust its settings.
 
-## Package entry points
+### Render an SVG and export PNG
 
-| Import suffix | Distributed implementation |
+```ts
+import { MetalMark } from '@zontafor/luxleaf-metal-mark';
+
+export async function renderLogoPNG(canvas: HTMLCanvasElement): Promise<Blob> {
+  const renderer = new MetalMark(canvas, { animate: false, angle: 35, edge: 1.2 });
+  try {
+    await renderer.loadSVG(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+        <path fill="black" d="M100 15L185 100L100 185L15 100Z"/>
+      </svg>
+    `);
+    return await renderer.exportPNG();
+  } finally {
+    renderer.destroy();
+  }
+}
+```
+
+Pass a mounted, sized canvas. The returned Blob can be downloaded or passed to your application. Cleanup runs even if decoding or export fails.
+
+### Validate and save settings
+
+```ts
+import { validate, serialize, deserialize } from '@zontafor/luxleaf-metal-mark';
+
+const settings = validate({ angle: 35, edge: 1.2, speed: 0.2, animate: true });
+const json = serialize(settings);
+const restored = deserialize(json);
+console.info(restored.angle); // 35
+
+```
+
+This round-trips renderer settings. To include the logo image and project metadata, use the project helpers demonstrated in the advanced studio.
+
+## API guide
+
+| Entry or symbol | Purpose |
 |---|---|
-| `.` | `./dist/index.js` |
-| `./server` | `./dist/server.js` |
+| `MetalCanvas` | React wrapper; options and onReady(renderer) callback. |
+| `MetalMark(canvas, options)` | Imperative renderer with update(), load(), loadSVG(), exportPNG() and destroy(). |
+| `validate / serialize / deserialize` | Validated settings and JSON round-trip. |
+| `recordCanvas / ProjectHistory` | Video recording and reversible project edits. |
+| `/server` | Authenticated SQLite reference adapter; deployment controls belong to the host. |
 
-## Implemented scope
+### Common options
 
-### Original implementation
+| Option | Default | Accepted values |
+|---|---|---|
+| `color` | `#c6d9cb` | Six-digit hex color |
+| `speed / frequency` | `0.3 / 7` | 0–2 / 1–20 |
+| `distortion / contrast` | `0.6 / 1.2` | 0–2 / 0.3–3 |
+| `angle / edge / chromatic` | `25 / 1 / 0.15` | −180–180 / 0–3 / 0–1 |
+| `animate` | `true` | Boolean |
 
-No Paper Design source, shader or assets are included. This package is independently implemented; it is not an exact recreation or API-compatible fork of that restricted product.
+## Run the demos
 
-### Image pipeline
+After `npm run dev`, append a route below to the local Vite address. These links point to checked-in source; GitHub does not execute the demos itself.
 
-Linear-time distance transform, alpha/luminance masks, bevel normals, bounded local PNG/WebP decoding, and a geometry-only SVG sanitizer/rasterizer.
+| Local route | Example | Source |
+|---|---|---|
+| `/` | Compact example | [React entry](demo/main.tsx) |
+| `/advanced.html` | Full workbench shown above | [Workbench](demo/advanced.tsx) |
+| `/checks.html` | Base browser checks | [Check page](demo/checks.html) |
+| `/checks-expanded.html` | Expanded browser checks | [Check page](demo/checks-expanded.html) |
 
-### Studio and persistence
+## Development and verification
 
-Directional metal reflections, edge/chromatic controls, PNG and WebM exports, portable embedded-logo projects, undo/redo, bounded fragment sharing, authenticated SQLite project CRUD with expiry and opt-in public reads.
+```sh
+npm run verify          # Type checks, tests, build, and foundation checks where defined
+npm run verify:package  # Inspect and import the built package archive
+```
 
-### Remaining host verification
+Open the browser check pages separately and use their Run button. [Validation notes](docs/VALIDATION.md) distinguish automated checks, browser observations and remaining host verification. Passing checks does not certify complete upstream or cross-device parity.
 
-The server is a single-process reference adapter, not an enterprise tenant/auth system. Distributed storage, quotas, host rate limits, HTTPS deployment, independent security assessment and broad device/codec certification remain outside this release.
+### Integration notes
 
-## Verification
+Metal Mark is independently implemented; exact Paper pixel or API equivalence is not established. In 0.2.0, use loadSVG(text) for SVG and load(file) for PNG/WebP. The newer six-control LiquidMark editor is available only in PR #1, not the published 0.2.0 package.
 
-The current suite includes **16 unit/integration tests**. The expanded browser page contains **10 assertions**, run separately from headless CI. These counts describe specific checks, not proof of exact feature, pixel or performance parity with another product. See [validation](docs/VALIDATION.md) for evidence and known limits.
+## Documentation
 
-The repository includes source, tests, runnable examples, build configuration, architecture notes, dependency notices and release workflows. The npm archive includes source and examples alongside JavaScript and declarations. It intentionally excludes installed dependencies, credentials and local user media.
+| Guide | What it covers |
+|---|---|
+| [Capabilities](docs/CAPABILITIES.md) | Implemented features and current limits |
+| [Architecture](docs/ARCHITECTURE.md) | Rendering, state and resource lifecycle |
+| [Validation](docs/VALIDATION.md) | Checks and their scope |
+| [Releases](docs/RELEASING.md) | Registry authentication, archives and release verification |
+| [Provenance](docs/PROVENANCE.md) | Foundation boundaries and original additions |
+| [Security](SECURITY.md) | Supported deployment assumptions |
+| [Changelog](CHANGELOG.md) | Release history |
 
-- [Capability matrix](docs/CAPABILITIES.md)
-- [Architecture and lifecycle](docs/ARCHITECTURE.md)
-- [Provenance](docs/PROVENANCE.md)
-- [Third-party notices](THIRD_PARTY_NOTICES.md)
-- [Security and supported deployment](SECURITY.md)
+## License and attribution
+
+Original LuxLeaf code, documentation and examples are covered by the [proprietary license](LICENSE), copyright **Michelle L. Wu**. Included third-party software retains its own licenses and authorship; see [third-party notices](THIRD_PARTY_NOTICES.md). Public repository visibility does not grant rights beyond those licenses.
